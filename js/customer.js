@@ -586,4 +586,8 @@ await fetch(`${Config.BASE_URL}/api/loans/cancel/${id}`, { method: 'DELETE', hea
     });
 
     fetchAllData();
+    // Kích hoạt view mặc định (Tổng quan) ngay lập tức
+    setTimeout(() => {
+        document.querySelector('.nav-links li.active')?.click();
+    }, 500);
 });

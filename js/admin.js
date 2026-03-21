@@ -438,4 +438,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Init
     fetchAllData();
+    // Kích hoạt view mặc định (Tổng quan) ngay lập tức
+    setTimeout(() => {
+        document.querySelector('.nav-links li.active')?.click();
+    }, 500);
 });

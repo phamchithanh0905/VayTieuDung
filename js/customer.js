@@ -43,12 +43,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const fetchAllData = async () => {
         try {
-            const res = await fetch(`${Config.BASE_URL}/api/loans?customerId=${currentUser.id}`, { headers });
-            loans = await res.json();
+            const [loansRes, settingsRes] = await Promise.all([
+                fetch(`${Config.BASE_URL}/api/loans?customerId=${currentUser.id}`, { headers }),
+                fetch(`${Config.BASE_URL}/api/settings`, { headers })
+            ]);
+            loans = await loansRes.json();
+            const settings = await settingsRes.json();
+            
+            updateDurationOptions(settings);
             refreshUI();
         } catch (err) {
-            console.error(err);
+            console.error('Error fetching data', err);
         }
+    };
+
+    const updateDurationOptions = (settings) => {
+        const select = document.querySelector('select[name="durationMonths"]');
+        if (!select) return;
+
+        const rate10 = settings.find(s => s.id === 'rate_10')?.is_active;
+        const rate15 = settings.find(s => s.id === 'rate_15')?.is_active;
+        const rate17 = settings.find(s => s.id === 'rate_17')?.is_active;
+
+        let options = '';
+        if (rate10) {
+            options += '<option value="1">1 Tháng (Lãi 10%/tháng)</option>';
+            options += '<option value="2">2 Tháng (Lãi 10%/tháng)</option>';
+        }
+        if (rate15) {
+            options += '<option value="3">3 Tháng (Lãi 15%/tháng)</option>';
+            options += '<option value="6">6 Tháng (Lãi 15%/tháng)</option>';
+        }
+        if (rate17) {
+            options += '<option value="12" selected>12 Tháng (Lãi 17%/tháng)</option>';
+        }
+
+        if (!options) {
+            options = '<option value="">Hiện tại không có gói nào khả dụng</option>';
+        }
+        select.innerHTML = options;
     };
 
     const refreshUI = () => {

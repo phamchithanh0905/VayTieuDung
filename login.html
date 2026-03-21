@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - Quản Lý Khoản Vay</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <script src="js/utils.js"></script>
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <button class="theme-toggle" id="themeToggleBtn" title="Chuyển giao diện Đậm/Nhạt">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <div class="auth-wrapper">
+        <div class="auth-card glass-panel">
+            <div class="auth-header">
+                <h1>Tài Chính Cá Nhân</h1>
+                <p>Hệ thống Quản lý khoản vay thông minh</p>
+            </div>
+
+            <div class="auth-tabs">
+                <div class="auth-tab active" data-tab="login">Đăng Nhập</div>
+                <div class="auth-tab" data-tab="register">Đăng Ký</div>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form active">
+                <div class="form-group">
+                    <label class="form-label">Tên đăng nhập</label>
+                    <input type="text" class="form-control" name="username" placeholder="Nhập tên đăng nhập" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mật khẩu</label>
+                    <input type="password" class="form-control" name="password" placeholder="Nhập mật khẩu" required>
+                </div>
+                <div id="loginError" class="error-message">Tên đăng nhập hoặc mật khẩu không chính xác.</div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Đăng Nhập <i
+                        class="fas fa-arrow-right"></i></button>
+                <div style="text-align: center; margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.85rem;">
+                    Khách demo: `khachhang1` / `123`
+                </div>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form">
+                <div class="form-group">
+                    <label class="form-label">Họ và Tên</label>
+                    <input type="text" class="form-control" name="fullname" placeholder="Nhập họ và tên" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tên đăng nhập mới</label>
+                    <input type="text" class="form-control" name="regUsername" placeholder="Nhập tên đăng nhập"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mật khẩu</label>
+                    <input type="password" class="form-control" name="regPassword" placeholder="Tạo mật khẩu" required>
+                </div>
+                <div id="regError" class="error-message">Có lỗi xảy ra.</div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Tạo Tài Khoản <i
+                        class="fas fa-user-plus"></i></button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/data.js"></script>
+    <script>
+        // Check if already logged in
+        document.addEventListener("DOMContentLoaded", () => {
+            const user = DataService.getCurrentUser();
+            if (user) {
+                window.location.href = user.role === 'admin' ? 'admin.html' : 'customer.html';
+            }
+
+            // Tab switching logic
+            const tabs = document.querySelectorAll('.auth-tab');
+            const forms = document.querySelectorAll('.auth-form');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const target = tab.dataset.tab;
+
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    forms.forEach(f => {
+                        f.classList.remove('active');
+                        if (f.id === `${target}Form`) {
+                            f.classList.add('active');
+                        }
+                    });
+                });
+            });
+
+            // Theme Toggle Logic Update Icon
+            const themeBtn = document.getElementById('themeToggleBtn');
+            const updateThemeIcon = () => {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                themeBtn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            };
+
+            updateThemeIcon(); // init
+
+            themeBtn.addEventListener('click', () => {
+                toggleTheme();
+                updateThemeIcon();
+            });
+
+            // Login Submit
+            const loginForm = document.getElementById('loginForm');
+            const loginError = document.getElementById('loginError');
+
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                loginError.style.display = 'none';
+
+                const username = loginForm.username.value;
+                const password = loginForm.password.value;
+
+                showLoader();
+                try {
+                    const response = await fetch('http://localhost:3000/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+
+                    if (response.ok) {
+                        const user = await response.json();
+                        localStorage.setItem('currentUser', JSON.stringify(user));
+                        Toast.success('Đăng nhập thành công!');
+                        setTimeout(() => {
+                            window.location.href = user.role === 'admin' ? 'admin.html' : 'customer.html';
+                        }, 1000);
+                    } else {
+                        const errorData = await response.json();
+                        const msg = errorData.message || 'Tên đăng nhập hoặc mật khẩu không chính xác.';
+                        Toast.error(msg);
+                        loginError.textContent = msg;
+                        loginError.style.display = 'block';
+                        const card = document.querySelector('.auth-card');
+                        card.style.animation = 'shake 0.5s';
+                        setTimeout(() => card.style.animation = '', 500);
+                    }
+                } catch (err) {
+                    Toast.error('Lỗi kết nối server');
+                    loginError.textContent = 'Không thể kết nối tới Backend Server!';
+                    loginError.style.display = 'block';
+                } finally {
+                    hideLoader();
+                }
+            });
+
+            // Register Submit
+            const registerForm = document.getElementById('registerForm');
+            const regError = document.getElementById('regError');
+
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                regError.style.display = 'none';
+
+                const fullname = registerForm.fullname.value;
+                const username = registerForm.regUsername.value;
+                const password = registerForm.regPassword.value;
+
+                showLoader();
+                try {
+                    const response = await fetch('http://localhost:3000/api/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password, name: fullname })
+                    });
+
+                    if (response.ok) {
+                        const newUser = await response.json();
+                        localStorage.setItem('currentUser', JSON.stringify(newUser));
+                        Toast.success('Đăng ký thành công!');
+                        setTimeout(() => {
+                            window.location.href = 'customer.html';
+                        }, 1000);
+                    } else {
+                        const errorData = await response.json();
+                        const msg = errorData.message || 'Có lỗi xảy ra.';
+                        Toast.error(msg);
+                        regError.textContent = msg;
+                        regError.style.display = 'block';
+                    }
+                } catch (err) {
+                    Toast.error('Lỗi kết nối server');
+                } finally {
+                    hideLoader();
+                }
+            });
+        });
+
+        // Add shake animation inside style on the fly if needed
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes shake {
+                0% { transform: translateX(0); }
+                25% { transform: translateX(5px); }
+                50% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+                100% { transform: translateX(0); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+
+</html>

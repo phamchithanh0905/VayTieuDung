@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Quản Lý Khoản Vay</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body style="opacity: 0; transition: opacity 0.5s;">
+    <script src="js/utils.js"></script>
+    <div class="layout">
+        <aside class="sidebar glass-panel">
+            <div class="sidebar-header">
+                <h2>AdminPanel</h2>
+            </div>
+            <ul class="nav-links">
+                <li class="active" data-view="dashboard"><i class="fas fa-home"></i> Tổng Quan</li>
+                <li data-view="loans"><i class="fas fa-money-bill-wave"></i> Quản Lý Khoản Vay</li>
+                <li data-view="users"><i class="fas fa-users"></i> Khách Hàng</li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <nav class="navbar glass-panel">
+                <div class="menu-toggle"><i class="fas fa-bars"></i></div>
+                <div class="nav-right">
+                    <button class="theme-toggle header-theme-toggle" id="themeToggleBtn" title="Giao diện">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <div class="user-profile">
+                        <div class="avatar"><i class="fas fa-user-shield"></i></div>
+                        <span id="userNameDisplay">Admin</span>
+                        <div class="dropdown glass-panel">
+                            <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container" id="mainContainer">
+                <!-- Dashboard View -->
+                <div class="view-section active" id="dashboardView">
+                    <div class="page-header">
+                        <h1>Tổng Quan Hệ Thống</h1>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card glass-panel">
+                            <div class="stat-icon" style="background: rgba(67, 97, 238, 0.1); color: var(--primary-color);"><i class="fas fa-users"></i></div>
+                            <div class="stat-info">
+                                <h3>Tổng Khách Hàng</h3>
+                                <p id="totalUsersStat">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-panel">
+                            <div class="stat-icon" style="background: rgba(252, 163, 17, 0.1); color: var(--warning-color);"><i class="fas fa-hand-holding-dollar"></i></div>
+                            <div class="stat-info">
+                                <h3>Đang Chờ Duyệt</h3>
+                                <p id="pendingLoansStat">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-panel">
+                            <div class="stat-icon" style="background: rgba(76, 201, 240, 0.1); color: var(--success-color);"><i class="fas fa-coins"></i></div>
+                            <div class="stat-info">
+                                <h3>Tổng Dư Nợ (VNĐ)</h3>
+                                <p id="totalDebtStat">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 2rem;">
+                        <div class="glass-panel" style="padding: 1.5rem;">
+                            <h3>Trạng Thái Khoản Vay</h3>
+                            <canvas id="adminStatusChart" style="max-height: 250px;"></canvas>
+                        </div>
+                        <div class="glass-panel" style="padding: 1.5rem;">
+                            <h3>Phân Bổ Dư Nợ</h3>
+                            <canvas id="adminDebtChart" style="max-height: 250px;"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="recent-section glass-panel">
+                        <h3>Các khoản vay gần đây</h3>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mã Khoản Vay</th>
+                                        <th>Khách Hàng</th>
+                                        <th>Số Tiền</th>
+                                        <th>Lãi Suất</th>
+                                        <th>Trạng Thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentLoansTableBody">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loans Detail View -->
+                <div class="view-section" id="loansView">
+                    <div class="page-header">
+                        <h1>Tất Cả Khoản Vay</h1>
+                    </div>
+                    <div class="glass-panel" style="padding: 1.5rem;">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mã KV</th>
+                                        <th>Khách Hàng</th>
+                                        <th>Số Tiền (VNĐ)</th>
+                                        <th>Lãi Suất</th>
+                                        <th>Kỳ Hạn</th>
+                                        <th>Trạng Thái</th>
+                                        <th>Hành Động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="allLoansTableBody">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Users View -->
+                <div class="view-section" id="usersView">
+                    <div class="page-header">
+                        <h1>Danh Sách Khách Hàng</h1>
+                    </div>
+                    <div class="glass-panel" style="padding: 1.5rem;">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mã KH</th>
+                                        <th>Họ Tên</th>
+                                        <th>Tên Đăng Nhập</th>
+                                        <th>Số Khoản Vay</th>
+                                        <th>Thao Tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal" id="loanActionModal">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h2>Xử lý Khoản Vay <span id="modalLoanId"></span></h2>
+                <button class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Khách hàng: <strong id="modalCustomerName"></strong></p>
+                <p>Số tiền: <strong id="modalAmount"></strong></p>
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label class="form-label">Ghi chú từ Admin (không bắt buộc):</label>
+                    <textarea id="modalAdminNote" class="form-control" rows="3" placeholder="Nhập lý do duyệt/từ chối hoặc lời nhắn tới khách hàng..."></textarea>
+                </div>
+                <p style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.85rem;">Bạn muốn thực hiện thao tác gì với khoản vay này?</p>
+                
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button class="btn btn-primary" id="btnApprove" style="background: var(--success-color); color: #121212;"><i class="fas fa-check"></i> Duyệt Khoản Vay</button>
+                    <button class="btn btn-primary" id="btnReject" style="background: var(--danger-color);"><i class="fas fa-times"></i> Từ Chối</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

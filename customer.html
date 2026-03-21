@@ -154,15 +154,27 @@
                                 <small style="color: var(--text-secondary); margin-top: 0.5rem; display: block;">Tối
                                     thiểu 1,000,000 VNĐ</small>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">Kỳ Hạn Vay (Tháng)</label>
-                                <select class="form-control" name="durationMonths" required>
-                                    <option value="1">1 Tháng (Lãi 10%/tháng)</option>
-                                    <option value="2">2 Tháng (Lãi 10%/tháng)</option>
-                                    <option value="3">3 Tháng (Lãi 15%/tháng)</option>
-                                    <option value="6">6 Tháng (Lãi 15%/tháng)</option>
-                                    <option value="12" selected>12 Tháng (Lãi 17%/tháng)</option>
-                                </select>
+                            <div class="row">
+                                <div class="col-md-6 form-group">
+                                    <label class="form-label">Kỳ Hạn Vay (Tháng)</label>
+                                    <select class="form-control" name="durationMonths" required>
+                                        <option value="1">1 Tháng</option>
+                                        <option value="3">3 Tháng</option>
+                                        <option value="6">6 Tháng</option>
+                                        <option value="12" selected>12 Tháng</option>
+                                        <option value="24">24 Tháng</option>
+                                        <option value="36">36 Tháng</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 form-group">
+                                    <label class="form-label">Tỷ Lệ Lãi Suất (%)</label>
+                                    <select class="form-control" name="interestRate" required id="interestRateSelect">
+                                        <!-- Populated from Admin Settings -->
+                                        <option value="10">10% / Tháng</option>
+                                        <option value="15">15% / Tháng</option>
+                                        <option value="17">17% / Tháng</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <div

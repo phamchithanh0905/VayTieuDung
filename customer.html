@@ -27,6 +27,7 @@
                 <li data-view="apply"><i class="fas fa-plus-circle"></i> Đăng ký vay</li>
                 <li data-view="myloans"><i class="fas fa-history"></i> Khoản vay của tôi</li>
                 <li data-view="notifications"><i class="fas fa-bell"></i> Thông báo hệ thống</li>
+                <li data-view="profile"><i class="fas fa-user-circle"></i> Thông tin cá nhân</li>
             </ul>
         </aside>
 
@@ -58,6 +59,43 @@
                         <div class="loader-inner">Đang tải thông báo...</div>
                     </div>
                 </div>
+                <!-- Profile View -->
+                <div class="view-section" id="profileView">
+                    <div class="page-header">
+                        <h1>Thông Tin Cá Nhân</h1>
+                    </div>
+                    <div class="glass-panel" style="padding: 2rem; max-width: 800px; margin: 0 auto;">
+                        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Vui lòng khai báo đầy đủ thông tin để hệ thống phê duyệt các tính năng vay vốn.</p>
+                        <form id="updateProfileForm">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                                <div class="form-group">
+                                    <label class="form-label">Số điện thoại</label>
+                                    <input type="text" class="form-control" name="phone" placeholder="Vd: 0942xxx..." required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Số CCCD (12 số)</label>
+                                    <input type="text" class="form-control" name="idCard" placeholder="Vd: 079..." required>
+                                </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label class="form-label">Địa chỉ hiện tại</label>
+                                    <input type="text" class="form-control" name="address" placeholder="Sô nhà, tên đường, Phường/Xã..." required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Công việc / Nghề nghiệp</label>
+                                    <input type="text" class="form-control" name="job" placeholder="Vd: Nhân viên văn phòng" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Thu nhập hàng tháng (VNĐ)</label>
+                                    <input type="number" class="form-control" name="income" placeholder="Vd: 15000000" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 2rem;">
+                                <i class="fas fa-save"></i> Cập Nhật Hồ Sơ
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
                 <!-- Dashboard View -->
                 <div class="view-section active" id="dashboardView">
                     <div class="page-header">

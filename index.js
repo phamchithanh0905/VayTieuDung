@@ -153,6 +153,31 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
+// --- API Profile ---
+app.get('/api/profile', verifyToken, async (req, res) => {
+    try {
+        const result = await pool.query('SELECT phone, id_card, address, job, income FROM Users WHERE id = $1', [req.user.id]);
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.put('/api/profile', verifyToken, async (req, res) => {
+    try {
+        const { phone, idCard, address, job, income } = req.body;
+        await pool.query(
+            'UPDATE Users SET phone = $1, id_card = $2, address = $3, job = $4, income = $5 WHERE id = $6',
+            [phone, idCard, address, job, income, req.user.id]
+        );
+        res.json({ message: 'Profile updated' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // --- API Admin (Bảo vệ bởi verifyToken) ---
 app.get('/api/users', verifyToken, async (req, res) => {
     if (req.user.role !== 'admin') return res.status(403).json({ message: 'Từ chối truy cập.' });

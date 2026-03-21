@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('welcomeName').textContent = currentUser.name;
 
     let loans = [];
+    let userProfile = null;
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
@@ -43,22 +44,71 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const fetchAllData = async () => {
         try {
-            const [loansRes, settingsRes, notifRes] = await Promise.all([
+            const [loansRes, settingsRes, notifRes, profileRes] = await Promise.all([
                 fetch(`${Config.BASE_URL}/api/loans?customerId=${currentUser.id}`, { headers }),
                 fetch(`${Config.BASE_URL}/api/settings`, { headers }),
-                fetch(`${Config.BASE_URL}/api/notifications`, { headers })
+                fetch(`${Config.BASE_URL}/api/notifications`, { headers }),
+                fetch(`${Config.BASE_URL}/api/profile`, { headers })
             ]);
             loans = await loansRes.json();
             const settings = await settingsRes.json();
             const notifs = await notifRes.json();
+            userProfile = await profileRes.json();
             
             updateDurationOptions(settings);
             renderNotifications(notifs);
+            renderProfile();
             refreshUI();
         } catch (err) {
             console.error('Error fetching data', err);
         }
     };
+
+    const isProfileComplete = () => {
+        if (!userProfile) return false;
+        return userProfile.phone && userProfile.id_card && userProfile.address && userProfile.job && userProfile.income;
+    };
+
+    const renderProfile = () => {
+        if (!userProfile) return;
+        const form = document.getElementById('updateProfileForm');
+        if (!form) return;
+        
+        form.phone.value = userProfile.phone || '';
+        form.idCard.value = userProfile.id_card || '';
+        form.address.value = userProfile.address || '';
+        form.job.value = userProfile.job || '';
+        form.income.value = userProfile.income || '';
+    };
+
+    document.getElementById('updateProfileForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const profileData = {
+            phone: form.phone.value,
+            idCard: form.idCard.value,
+            address: form.address.value,
+            job: form.job.value,
+            income: parseFloat(form.income.value)
+        };
+
+        showLoader();
+        try {
+            const res = await fetch(`${Config.BASE_URL}/api/profile`, {
+                method: 'PUT',
+                headers,
+                body: JSON.stringify(profileData)
+            });
+            if (res.ok) {
+                Toast.success('Cập nhật hồ sơ thành công!');
+                fetchAllData(); // Refresh UI to unlock Apply
+            }
+        } catch (err) {
+            Toast.error('Lỗi khi cập nhật hồ sơ');
+        } finally {
+            hideLoader();
+        }
+    });
 
     const renderNotifications = (notifs) => {
         const container = document.getElementById('notifListContainer');
@@ -425,10 +475,20 @@ await fetch(`${Config.BASE_URL}/api/loans/cancel/${id}`, { method: 'DELETE', hea
 
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
+            const targetView = link.dataset.view;
+
+            // Ràng buộc: Phải đầy đủ thông tin mới được vào mục Đăng ký vay
+            if (targetView === 'apply' && !isProfileComplete()) {
+                Toast.warn('Vui lòng khai báo đầy đủ thông tin cá nhân trước khi sử dụng tính năng vay!');
+                // Tự động nhảy sang trang Profile
+                const profileLink = Array.from(navLinks).find(l => l.dataset.view === 'profile');
+                if (profileLink) profileLink.click();
+                return;
+            }
+
             navLinks.forEach(l => l.classList.remove('active'));
             link.classList.add('active');
             
-            const targetView = link.dataset.view;
             viewSections.forEach(sec => {
                 sec.classList.remove('active');
                 if (sec.id === `${targetView}View`) sec.classList.add('active');

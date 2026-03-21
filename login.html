@@ -98,17 +98,20 @@
         document.addEventListener("DOMContentLoaded", () => {
             const user = DataService.getCurrentUser();
             const token = localStorage.getItem('token');
-            if (user && token) {
-                // Chỉ chuyển hướng nếu không phải là trường hợp mới logout/hết hạn
-                const urlParams = new URLSearchParams(window.location.search);
-                if (!urlParams.has('session')) {
-                    window.location.href = user.role === 'admin' ? 'admin.html' : 'customer.html';
-                }
+            const urlParams = new URLSearchParams(window.location.search);
+            const isExpired = urlParams.get('session') === 'expired';
+
+            if (user && token && !isExpired) {
+                // Chỉ chuyển hướng nếu thực sự có cả user và token hợp lệ
+                window.location.href = user.role === 'admin' ? 'admin.html' : 'customer.html';
+            } else if (!isExpired) {
+                // Nếu dữ liệu không đồng nhất (thiếu 1 trong 2) mà không phải do logout chủ động, thì xóa sạch để dừng loop
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('token');
             }
 
-            // Kiểm tra session hết hạn
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('session') === 'expired') {
+            // Kiểm tra session hết hạn để hiện thông báo
+            if (isExpired) {
                 Toast.warn('Phiên làm việc đã hết hạn! Vui lòng đăng nhập lại để tiếp tục 24/24.');
             }
 

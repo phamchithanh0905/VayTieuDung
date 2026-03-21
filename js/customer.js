@@ -417,13 +417,28 @@ await fetch(`${Config.BASE_URL}/api/loans/cancel/${id}`, { method: 'DELETE', hea
     const durationInput = document.querySelector('#applyLoanForm select[name="durationMonths"]');
     const estimateDisplay = document.getElementById('loanEstimateDisplay');
 
+    // Formatter cho ô Số tiền vay
+    const amountInputEl = document.getElementById('loanAmountInput');
+    if (amountInputEl) {
+        amountInputEl.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, "");
+            if (value) {
+                e.target.value = new Intl.NumberFormat('vi-VN').format(value);
+            }
+            updateEstimate();
+        });
+    }
+
     const updateEstimate = () => {
-        const amountInput = document.querySelector('input[name="amount"]');
+        const amountInput = document.getElementById('loanAmountInput');
         const durationInput = document.querySelector('select[name="durationMonths"]');
         const rateSelect = document.querySelector('select[name="interestRate"]');
 
         if (!amountInput || !rateSelect) return;
-        const amt = parseFloat(amountInput.value);
+
+        // Gỡ bỏ dấu chấm/phẩy để lấy số gốc
+        const rawAmt = amountInput.value.replace(/\./g, "").replace(/,/g, "");
+        const amt = parseFloat(rawAmt);
         const months = parseInt(durationInput.value);
         const interest = parseFloat(rateSelect.value);
 
@@ -446,7 +461,7 @@ await fetch(`${Config.BASE_URL}/api/loans/cancel/${id}`, { method: 'DELETE', hea
     };
 
     if(document.querySelector('form[id="applyLoanForm"]')){
-        document.querySelector('input[name="amount"]').addEventListener('input', updateEstimate);
+        // Event listeners handled by amountInputEl above for 'input'
         document.querySelector('select[name="durationMonths"]').addEventListener('change', updateEstimate);
         document.querySelector('select[name="interestRate"]').addEventListener('change', updateEstimate);
     }
@@ -454,7 +469,9 @@ await fetch(`${Config.BASE_URL}/api/loans/cancel/${id}`, { method: 'DELETE', hea
     document.getElementById('applyLoanForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const form = e.target;
-        const amount = parseFloat(form.amount.value);
+        
+        const rawAmt = form.amount.value.replace(/\./g, "").replace(/,/g, "");
+        const amount = parseFloat(rawAmt);
         const durationMonths = parseInt(form.durationMonths.value);
         const interestRate = parseFloat(form.interestRate.value);
 

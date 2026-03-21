@@ -124,7 +124,7 @@ app.get('/api/users', verifyToken, async (req, res) => {
     if (req.user.role !== 'admin') return res.status(403).json({ message: 'Từ chối truy cập.' });
     try {
         const result = await pool.query(`
-            SELECT u.id, u.name, u.username, 
+            SELECT u.id, u.name, u.username, u.phone, u.id_card, u.address, u.job, u.income, 
             (SELECT COUNT(*) FROM Loans l WHERE l."customerId" = u.id) as "loanCount"
             FROM Users u WHERE u.role = 'customer'
         `);

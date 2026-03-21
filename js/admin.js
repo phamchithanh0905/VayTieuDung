@@ -216,7 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
         tb.innerHTML = users.map(u => `
             <tr>
                 <td>${u.id}</td>
-                <td>${u.name}</td>
+                <td><a href="#" class="view-user-details" data-id="${u.id}" style="color:var(--primary-color); font-weight:600;">${u.name}</a></td>
                 <td>${u.username}</td>
                 <td>${u.loanCount} khoản vay</td>
                 <td>
@@ -224,6 +224,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 </td>
             </tr>
         `).join('');
+
+        // Chi tiết người dùng
+        document.querySelectorAll('.view-user-details').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                showUserDetails(e.target.dataset.id);
+            });
+        });
 
         document.querySelectorAll('.btn-delete-user').forEach(btn => {
             btn.addEventListener('click', async (e) => {
@@ -234,6 +242,27 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
         });
+    };
+
+    const showUserDetails = (id) => {
+        const user = users.find(u => u.id == id);
+        if (!user) return;
+
+        const body = document.getElementById('userDetailBody');
+        body.innerHTML = `
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <p><strong>Mã KH:</strong><br>${user.id}</p>
+                <p><strong>Tên ĐN:</strong><br>${user.username}</p>
+                <p><strong>Họ Tên:</strong><br>${user.name}</p>
+                <p><strong>SĐT:</strong><br>${user.phone || 'Chưa cập nhật'}</p>
+                <p><strong>Số CCCD:</strong><br>${user.id_card || 'Chưa cập nhật'}</p>
+                <p><strong>Thu nhập:</strong><br>${user.income ? formatCurrency(user.income) : 'Chưa cập nhật'}</p>
+                <p style="grid-column: span 2;"><strong>Địa chỉ:</strong><br>${user.address || 'Chưa cập nhật'}</p>
+                <p style="grid-column: span 2;"><strong>Nghề nghiệp:</strong><br>${user.job || 'Chưa cập nhật'}</p>
+            </div>
+            <button class="btn btn-primary" style="width:100%; margin-top:1.5rem;" onclick="document.getElementById('userDetailsModal').style.display='none'">Đóng</button>
+        `;
+        document.getElementById('userDetailsModal').style.display = 'block';
     };
 
     // Action Modal

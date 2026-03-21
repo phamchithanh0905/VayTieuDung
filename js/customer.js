@@ -584,6 +584,7 @@ await fetch(`${Config.BASE_URL}/api/loans/cancel/${id}`, { method: 'DELETE', hea
                 return;
             }
 
+            if (link.classList.contains('active')) return;
             navLinks.forEach(l => l.classList.remove('active'));
             link.classList.add('active');
             

@@ -50,24 +50,41 @@
                 </div>
             </form>
 
-            <!-- Register Form -->
-            <form id="registerForm" class="auth-form">
+            <form id="registerForm" class="auth-form" style="max-height: 450px; overflow-y: auto; padding-right: 5px;">
                 <div class="form-group">
                     <label class="form-label">Họ và Tên</label>
                     <input type="text" class="form-control" name="fullname" placeholder="Nhập họ và tên" required>
                 </div>
                 <div class="form-group">
+                    <label class="form-label">Số điện thoại</label>
+                    <input type="text" class="form-control" name="phone" placeholder="Nhập số điện thoại" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Số CCCD</label>
+                    <input type="text" class="form-control" name="idCard" placeholder="Nhập số CCCD" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Địa chỉ</label>
+                    <input type="text" class="form-control" name="address" placeholder="Nhập địa chỉ" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nghề nghiệp</label>
+                    <input type="text" class="form-control" name="job" placeholder="Nhập nghề nghiệp" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Thu nhập hàng tháng</label>
+                    <input type="number" class="form-control" name="income" placeholder="VD: 15000000" required>
+                </div>
+                <div class="form-group">
                     <label class="form-label">Tên đăng nhập mới</label>
-                    <input type="text" class="form-control" name="regUsername" placeholder="Nhập tên đăng nhập"
-                        required>
+                    <input type="text" class="form-control" name="regUsername" placeholder="Nhập tên đăng nhập" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Mật khẩu</label>
                     <input type="password" class="form-control" name="regPassword" placeholder="Tạo mật khẩu" required>
                 </div>
                 <div id="regError" class="error-message">Có lỗi xảy ra.</div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Tạo Tài Khoản <i
-                        class="fas fa-user-plus"></i></button>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin: 1rem 0;">Tạo Tài Khoản <i class="fas fa-user-plus"></i></button>
             </form>
         </div>
     </div>
@@ -173,13 +190,27 @@
                 const fullname = registerForm.fullname.value;
                 const username = registerForm.regUsername.value;
                 const password = registerForm.regPassword.value;
+                const phone = registerForm.phone.value;
+                const idCard = registerForm.idCard.value;
+                const address = registerForm.address.value;
+                const job = registerForm.job.value;
+                const income = registerForm.income.value;
 
                 showLoader();
                 try {
                     const response = await fetch(`${Config.BASE_URL}/api/register`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, password, name: fullname })
+                        body: JSON.stringify({ 
+                            username, 
+                            password, 
+                            name: fullname,
+                            phone,
+                            idCard,
+                            address,
+                            job,
+                            income
+                        })
                     });
 
                     if (response.ok) {

@@ -308,8 +308,12 @@ await fetch(`${Config.BASE_URL}/api/loans/cancel/${id}`, { method: 'DELETE', hea
         if (!amountInput) return; // In case we're not on customer applying view
         const amt = parseFloat(amountInput.value);
         const months = parseInt(durationInput.value);
+        let interest = 10;
+        if (months >= 3 && months <= 6) interest = 15;
+        if (months >= 12) interest = 17;
+
         if (amt >= 1000000) {
-            const summary = calculateLoanSummary(amt, 12, months);
+            const summary = calculateLoanSummary(amt, interest, months);
             estimateDisplay.innerHTML = `
                 <div style="display:flex; justify-content: space-between; margin-bottom: 5px;">
                     <span>Tổng lãi dự kiến:</span> <strong>${formatCurrency(summary.totalInterest)}</strong>
@@ -335,6 +339,9 @@ await fetch(`${Config.BASE_URL}/api/loans/cancel/${id}`, { method: 'DELETE', hea
         const form = e.target;
         const amount = parseFloat(form.amount.value);
         const durationMonths = parseInt(form.durationMonths.value);
+        let interestRate = 10;
+        if (durationMonths >= 3 && durationMonths <= 6) interestRate = 15;
+        if (durationMonths >= 12) interestRate = 17;
 
         if (amount < 1000000) return Toast.warn('Tối thiểu 1,000,000 VNĐ');
 
@@ -346,7 +353,7 @@ await fetch(`${Config.BASE_URL}/api/loans/cancel/${id}`, { method: 'DELETE', hea
                 body: JSON.stringify({ 
                     customerId: currentUser.id, 
                     amount, 
-                    interestRate: 12, 
+                    interestRate, 
                     durationMonths 
                 })
             });

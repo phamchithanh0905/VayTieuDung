@@ -78,15 +78,15 @@ app.post('/api/login', async (req, res) => {
 
 app.post('/api/register', async (req, res) => {
     try {
-        const { username, password, name } = req.body;
+        const { username, password, name, phone, idCard, address, job, income } = req.body;
         const checkUser = await pool.query('SELECT * FROM Users WHERE username = $1', [username]);
         if (checkUser.rows.length > 0) return res.status(400).json({ message: 'Tên đăng nhập đã tồn tại.' });
         
         const hashedPassword = await bcrypt.hash(password, 10);
         const id = 'U' + Date.now();
         await pool.query(
-            'INSERT INTO Users (id, username, password, name, role) VALUES ($1, $2, $3, $4, $5)',
-            [id, username, hashedPassword, name, 'customer']
+            'INSERT INTO Users (id, username, password, name, role, phone, id_card, address, job, income) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+            [id, username, hashedPassword, name, 'customer', phone, idCard, address, job, income]
         );
             
         res.status(201).json({ message: 'Đăng ký thành công!' });

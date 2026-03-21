@@ -157,16 +157,17 @@
                             <div class="form-group">
                                 <label class="form-label">Kỳ Hạn Vay (Tháng)</label>
                                 <select class="form-control" name="durationMonths" required>
-                                    <option value="6">6 Tháng</option>
-                                    <option value="12" selected>12 Tháng</option>
-                                    <option value="24">24 Tháng</option>
-                                    <option value="36">36 Tháng</option>
+                                    <option value="1">1 Tháng (Lãi 10%/tháng)</option>
+                                    <option value="2">2 Tháng (Lãi 10%/tháng)</option>
+                                    <option value="3">3 Tháng (Lãi 15%/tháng)</option>
+                                    <option value="6">6 Tháng (Lãi 15%/tháng)</option>
+                                    <option value="12" selected>12 Tháng (Lãi 17%/tháng)</option>
                                 </select>
                             </div>
 
                             <div
                                 style="background: rgba(76, 201, 240, 0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
-                                <strong>Lưu ý:</strong> Lãi suất cố định hiện tại là <strong>12%/năm</strong>.<br>
+                                <strong>Lưu ý:</strong> Lãi suất được tính theo tháng dựa trên gói vay bạn chọn.<br>
                                 <div style="margin-top: 10px; border-top: 1px dashed var(--primary-color); padding-top: 10px;" id="loanEstimateDisplay">
                                     Vui lòng nhập số tiền để xem ước tính trả góp.
                                 </div>

@@ -135,11 +135,16 @@ app.post('/api/login', async (req, res) => {
 
 app.post('/api/register', async (req, res) => {
     try {
-        const { username, password, name, phone, idCard, address, job, income } = req.body;
-        const checkUser = await pool.query('SELECT * FROM Users WHERE username = $1', [username]);
+        const { fullname, phone, idCard, address, job, income, regUsername, regPassword } = req.body;
+        
+        // Ràng buộc Server-side
+        if (!/^0[0-9]{9}$/.test(phone)) return res.status(400).json({ message: 'Số điện thoại phải đúng 10 chữ số và bắt đầu bằng số 0' });
+        if (!/^[0-9]{12}$/.test(idCard)) return res.status(400).json({ message: 'Số CCCD phải đúng 12 chữ số' });
+
+        const checkUser = await pool.query('SELECT * FROM Users WHERE username = $1', [regUsername]);
         if (checkUser.rows.length > 0) return res.status(400).json({ message: 'Tên đăng nhập đã tồn tại.' });
         
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(regPassword, 10);
         const id = 'U' + Date.now();
         await pool.query(
             'INSERT INTO Users (id, username, password, name, role, phone, id_card, address, job, income) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
@@ -167,6 +172,11 @@ app.get('/api/profile', verifyToken, async (req, res) => {
 app.put('/api/profile', verifyToken, async (req, res) => {
     try {
         const { phone, idCard, address, job, income } = req.body;
+        
+        // Ràng buộc Server-side
+        if (!/^0[0-9]{9}$/.test(phone)) return res.status(400).json({ message: 'Số điện thoại không hợp lệ (10 số)' });
+        if (!/^[0-9]{12}$/.test(idCard)) return res.status(400).json({ message: 'Số CCCD không hợp lệ (12 số)' });
+
         await pool.query(
             'UPDATE Users SET phone = $1, id_card = $2, address = $3, job = $4, income = $5 WHERE id = $6',
             [phone, idCard, address, job, income, req.user.id]

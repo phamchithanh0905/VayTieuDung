@@ -176,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
             btn.addEventListener('click', async (e) => {
                 const id = e.currentTarget.dataset.id;
                 if(confirm('Bạn có chắc chắn muốn xóa khách hàng này? Mọi khoản vay của họ sẽ bị xóa sạch.')) {
-                    await fetch(`http://localhost:3000/api/users/${id}`, { method: 'DELETE' });
+                    await fetch(`${Config.BASE_URL}/api/users/${id}`, { method: 'DELETE' });
                     fetchAllData();
                 }
             });
@@ -245,7 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         showLoader();
         try {
-            await fetch(`http://localhost:3000/api/loans/${currentActionLoanId}`, {
+            await fetch(`${Config.BASE_URL}/api/loans/${currentActionLoanId}`, {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(updateData)
@@ -264,7 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if(!currentActionLoanId) return;
         showLoader();
         try {
-            await fetch(`http://localhost:3000/api/loans/${currentActionLoanId}`, {
+            await fetch(`${Config.BASE_URL}/api/loans/${currentActionLoanId}`, {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ 

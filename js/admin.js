@@ -34,11 +34,17 @@ document.addEventListener("DOMContentLoaded", () => {
         return badges[status] || status;
     };
 
+    const token = localStorage.getItem('token');
+    const headers = { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
+
     const fetchAllData = async () => {
         try {
             const [usersRes, loansRes] = await Promise.all([
-                fetch(`${Config.BASE_URL}/api/users`),
-                fetch(`${Config.BASE_URL}/api/loans`)
+                fetch(`${Config.BASE_URL}/api/users`, { headers }),
+                fetch(`${Config.BASE_URL}/api/loans`, { headers })
             ]);
             
             users = await usersRes.json();
@@ -176,7 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
             btn.addEventListener('click', async (e) => {
                 const id = e.currentTarget.dataset.id;
                 if(confirm('Bạn có chắc chắn muốn xóa khách hàng này? Mọi khoản vay của họ sẽ bị xóa sạch.')) {
-                    await fetch(`${Config.BASE_URL}/api/users/${id}`, { method: 'DELETE' });
+                    await fetch(`${Config.BASE_URL}/api/users/${id}`, { method: 'DELETE', headers });
                     fetchAllData();
                 }
             });
@@ -247,7 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             await fetch(`${Config.BASE_URL}/api/loans/${currentActionLoanId}`, {
                 method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
+                headers,
                 body: JSON.stringify(updateData)
             });
             closeModal();
@@ -266,7 +272,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             await fetch(`${Config.BASE_URL}/api/loans/${currentActionLoanId}`, {
                 method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
+                headers,
                 body: JSON.stringify({ 
                     status: 'rejected',
                     adminNote: document.getElementById('modalAdminNote').value

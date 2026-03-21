@@ -136,11 +136,12 @@
                     });
 
                     if (response.ok) {
-                        const user = await response.json();
-                        localStorage.setItem('currentUser', JSON.stringify(user));
+                        const data = await response.json();
+                        localStorage.setItem('currentUser', JSON.stringify(data.user));
+                        localStorage.setItem('token', data.token); // Lưu token bảo mật
                         Toast.success('Đăng nhập thành công!');
                         setTimeout(() => {
-                            window.location.href = user.role === 'admin' ? 'admin.html' : 'customer.html';
+                            window.location.href = data.user.role === 'admin' ? 'admin.html' : 'customer.html';
                         }, 1000);
                     } else {
                         const errorData = await response.json();

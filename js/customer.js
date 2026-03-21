@@ -35,9 +35,15 @@ document.addEventListener("DOMContentLoaded", () => {
         return badges[status] || status;
     };
 
+    const token = localStorage.getItem('token');
+    const headers = { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
+
     const fetchAllData = async () => {
         try {
-            const res = await fetch(`${Config.BASE_URL}/api/loans?customerId=${currentUser.id}`);
+            const res = await fetch(`${Config.BASE_URL}/api/loans?customerId=${currentUser.id}`, { headers });
             loans = await res.json();
             refreshUI();
         } catch (err) {
@@ -239,10 +245,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const cancelLoanRequest = async (id) => {
         if (!confirm('Bạn có chắc chắn muốn hủy yêu cầu vay này?')) return;
         try {
-            await fetch(`${Config.BASE_URL}/api/users/cancel-loan/${id}`, { method: 'DELETE' }); // We need to add this endpoint or use generic delete
-            // For now let's just use the user deletion endpoint style if possible, or add a new one
-            // Since I don't want to change server too much, I'll use a new endpoint I'll add
-            await fetch(`${Config.BASE_URL}/api/loans/cancel/${id}`, { method: 'DELETE' });
+            await fetch(`${Config.BASE_URL}/api/users/cancel-loan/${id}`, { method: 'DELETE', headers });
+await fetch(`${Config.BASE_URL}/api/loans/cancel/${id}`, { method: 'DELETE', headers });
             alert('Đã hủy yêu cầu.');
             fetchAllData();
         } catch (err) { console.error(err); }
@@ -282,7 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             await fetch(`${Config.BASE_URL}/api/loans/${currentPayLoanId}`, {
                 method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
+                headers,
                 body: JSON.stringify(updateData)
             });
             closeModal();
@@ -338,7 +342,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             await fetch(`${Config.BASE_URL}/api/loans`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers,
                 body: JSON.stringify({ 
                     customerId: currentUser.id, 
                     amount, 

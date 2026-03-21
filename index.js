@@ -2,41 +2,73 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
 
 const app = express();
+const JWT_SECRET = process.env.JWT_SECRET || 'secret_key_vaytieudung_2024';
+
+// Middleware bảo mật
+app.use(helmet({
+    contentSecurityPolicy: false, // Tắt CSP để đơn giản cho demo với nhiều nguồn script
+}));
 app.use(cors());
 app.use(express.json());
 
-// Kết nối PostgreSQL (Supabase) thông qua biến môi trường DATABASE_URL
-// Ví dụ: postgresql://postgres:[password]@db.wgmyfcwcqykmujzsongk.supabase.co:5432/postgres
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false // Cần thiết cho Supabase/Render
+        rejectUnauthorized: false
     }
 });
 
-pool.connect((err, client, release) => {
-    if (err) {
-        return console.error('Lỗi kết nối database:', err.stack);
-    }
-    console.log('Đã kết nối thành công tới Supabase PostgreSQL');
+pool.connect((err) => {
+    if (err) console.error('Lỗi kết nối database:', err.stack);
+    else console.log('Đã kết nối thành công tới Supabase PostgreSQL');
 });
+
+// Middleware xác thực Token
+const verifyToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (!token) return res.status(403).json({ message: 'Không có token truy cập.' });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: 'Phiên làm việc hết hạn. Vui lòng đăng nhập lại.' });
+    }
+};
 
 // --- API Auth ---
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        const result = await pool.query(
-            'SELECT * FROM Users WHERE LOWER(username) = LOWER($1) AND password = $2',
-            [username, password]
-        );
+        const result = await pool.query('SELECT * FROM Users WHERE LOWER(username) = LOWER($1)', [username]);
         
-        if (result.rows.length > 0) {
-            res.json(result.rows[0]);
+        if (result.rows.length === 0) {
+            return res.status(401).json({ message: 'Tên đăng nhập không tồn tại.' });
+        }
+
+        const user = result.rows[0];
+        // Kiểm tra mật khẩu (hỗ trợ cả text thường cho dữ liệu cũ và hash cho dữ liệu mới)
+        let isMatch = false;
+        if (user.password.startsWith('$2a$') || user.password.startsWith('$2b$')) {
+            isMatch = await bcrypt.compare(password, user.password);
         } else {
-            res.status(401).json({ message: 'Tên đăng nhập hoặc mật khẩu không chính xác.' });
+            isMatch = (password === user.password);
+        }
+
+        if (isMatch) {
+            const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '2h' });
+            res.json({ token, user: { id: user.id, username: user.username, name: user.name, role: user.role } });
+        } else {
+            res.status(401).json({ message: 'Mật khẩu không chính xác.' });
         }
     } catch (err) {
         console.error(err);
@@ -47,28 +79,26 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/register', async (req, res) => {
     try {
         const { username, password, name } = req.body;
-        
         const checkUser = await pool.query('SELECT * FROM Users WHERE username = $1', [username]);
-            
-        if (checkUser.rows.length > 0) {
-            return res.status(400).json({ message: 'Tên đăng nhập đã tồn tại.' });
-        }
+        if (checkUser.rows.length > 0) return res.status(400).json({ message: 'Tên đăng nhập đã tồn tại.' });
         
+        const hashedPassword = await bcrypt.hash(password, 10);
         const id = 'U' + Date.now();
         await pool.query(
             'INSERT INTO Users (id, username, password, name, role) VALUES ($1, $2, $3, $4, $5)',
-            [id, username, password, name, 'customer']
+            [id, username, hashedPassword, name, 'customer']
         );
             
-        res.status(201).json({ id, username, password, name, role: 'customer' });
+        res.status(201).json({ message: 'Đăng ký thành công!' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
 });
 
-// --- API Admin ---
-app.get('/api/users', async (req, res) => {
+// --- API Admin (Bảo vệ bởi verifyToken) ---
+app.get('/api/users', verifyToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Từ chối truy cập.' });
     try {
         const result = await pool.query(`
             SELECT u.id, u.name, u.username, 
@@ -82,7 +112,8 @@ app.get('/api/users', async (req, res) => {
     }
 });
 
-app.delete('/api/users/:id', async (req, res) => {
+app.delete('/api/users/:id', verifyToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Từ chối truy cập.' });
     try {
         const id = req.params.id;
         await pool.query('DELETE FROM Loans WHERE "customerId" = $1', [id]);
@@ -94,21 +125,15 @@ app.delete('/api/users/:id', async (req, res) => {
     }
 });
 
-app.delete('/api/loans/cancel/:id', async (req, res) => {
-    try {
-        const id = req.params.id;
-        await pool.query("DELETE FROM Loans WHERE id = $1 AND status = 'pending'", [id]);
-        res.json({ message: 'Deleted' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-
-// --- API Loans ---
-app.get('/api/loans', async (req, res) => {
+// --- API Loans (Bảo vệ bởi verifyToken) ---
+app.get('/api/loans', verifyToken, async (req, res) => {
     try {
         const customerId = req.query.customerId;
+        // Nếu là customer, chỉ xem được chính mình
+        if (req.user.role === 'customer' && req.user.id !== customerId) {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+
         let query = `
             SELECT l.id, l."customerId", 
                    l.amount::float as amount, 
@@ -137,7 +162,7 @@ app.get('/api/loans', async (req, res) => {
     }
 });
 
-app.post('/api/loans', async (req, res) => {
+app.post('/api/loans', verifyToken, async (req, res) => {
     try {
         const { customerId, amount, interestRate, durationMonths } = req.body;
         const id = 'L' + Date.now();
@@ -152,7 +177,8 @@ app.post('/api/loans', async (req, res) => {
     }
 });
 
-app.put('/api/loans/:id', async (req, res) => {
+app.put('/api/loans/:id', verifyToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
     try {
         const id = req.params.id;
         const { status, adminNote, startDate, amountPaid, nextPaymentDate } = req.body;

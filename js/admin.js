@@ -37,8 +37,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const fetchAllData = async () => {
         try {
             const [usersRes, loansRes] = await Promise.all([
-                fetch('http://localhost:3000/api/users'),
-                fetch('http://localhost:3000/api/loans')
+                fetch(`${Config.BASE_URL}/api/users`),
+                fetch(`${Config.BASE_URL}/api/loans`)
             ]);
             
             users = await usersRes.json();

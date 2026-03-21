@@ -1,37 +1,39 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const sql = require('mssql/msnodesqlv8');
+const { Pool } = require('pg');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const dbConfig = {
-    driver: 'msnodesqlv8',
-    connectionString: 'Driver={ODBC Driver 17 for SQL Server};Server=localhost;Database=QuanLyKhoanVay;Trusted_Connection=yes;'
-};
-
-let pool;
-async function initializeDatabase() {
-    try {
-        pool = await sql.connect(dbConfig);
-        console.log("Database connected via Windows Authentication.");
-    } catch (err) {
-        console.error("Database connection failed:", err);
+// Kết nối PostgreSQL (Supabase) thông qua biến môi trường DATABASE_URL
+// Ví dụ: postgresql://postgres:[password]@db.wgmyfcwcqykmujzsongk.supabase.co:5432/postgres
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false // Cần thiết cho Supabase/Render
     }
-}
-initializeDatabase();
+});
 
+pool.connect((err, client, release) => {
+    if (err) {
+        return console.error('Lỗi kết nối database:', err.stack);
+    }
+    console.log('Đã kết nối thành công tới Supabase PostgreSQL');
+});
+
+// --- API Auth ---
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        const result = await pool.request()
-            .input('username', sql.VarChar, username)
-            .input('password', sql.VarChar, password)
-            .query('SELECT * FROM Users WHERE username = @username AND password = @password');
+        const result = await pool.query(
+            'SELECT * FROM Users WHERE username = $1 AND password = $2',
+            [username, password]
+        );
         
-        if (result.recordset.length > 0) {
-            res.json(result.recordset[0]);
+        if (result.rows.length > 0) {
+            res.json(result.rows[0]);
         } else {
             res.status(401).json({ message: 'Tên đăng nhập hoặc mật khẩu không chính xác.' });
         }
@@ -45,22 +47,17 @@ app.post('/api/register', async (req, res) => {
     try {
         const { username, password, name } = req.body;
         
-        const checkUser = await pool.request()
-            .input('username', sql.VarChar, username)
-            .query('SELECT * FROM Users WHERE username = @username');
+        const checkUser = await pool.query('SELECT * FROM Users WHERE username = $1', [username]);
             
-        if (checkUser.recordset.length > 0) {
+        if (checkUser.rows.length > 0) {
             return res.status(400).json({ message: 'Tên đăng nhập đã tồn tại.' });
         }
         
         const id = 'U' + Date.now();
-        await pool.request()
-            .input('id', sql.VarChar, id)
-            .input('username', sql.VarChar, username)
-            .input('password', sql.VarChar, password)
-            .input('name', sql.NVarChar, name)
-            .input('role', sql.VarChar, 'customer')
-            .query('INSERT INTO Users (id, username, password, name, role) VALUES (@id, @username, @password, @name, @role)');
+        await pool.query(
+            'INSERT INTO Users (id, username, password, name, role) VALUES ($1, $2, $3, $4, $5)',
+            [id, username, password, name, 'customer']
+        );
             
         res.status(201).json({ id, username, password, name, role: 'customer' });
     } catch (err) {
@@ -69,16 +66,17 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
+// --- API Admin ---
 app.get('/api/users', async (req, res) => {
     try {
-        const result = await pool.request()
-            .query(`
-                SELECT u.id, u.name, u.username, 
-                (SELECT COUNT(*) FROM Loans l WHERE l.customerId = u.id) as loanCount
-                FROM Users u WHERE u.role = 'customer'
-            `);
-        res.json(result.recordset);
+        const result = await pool.query(`
+            SELECT u.id, u.name, u.username, 
+            (SELECT COUNT(*) FROM Loans l WHERE l."customerId" = u.id) as "loanCount"
+            FROM Users u WHERE u.role = 'customer'
+        `);
+        res.json(result.rows);
     } catch (err) {
+        console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -86,10 +84,11 @@ app.get('/api/users', async (req, res) => {
 app.delete('/api/users/:id', async (req, res) => {
     try {
         const id = req.params.id;
-        await pool.request().input('id', sql.VarChar, id).query('DELETE FROM Loans WHERE customerId = @id');
-        await pool.request().input('id', sql.VarChar, id).query('DELETE FROM Users WHERE id = @id');
+        await pool.query('DELETE FROM Loans WHERE "customerId" = $1', [id]);
+        await pool.query('DELETE FROM Users WHERE id = $1', [id]);
         res.json({ message: 'Deleted' });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -97,33 +96,42 @@ app.delete('/api/users/:id', async (req, res) => {
 app.delete('/api/loans/cancel/:id', async (req, res) => {
     try {
         const id = req.params.id;
-        await pool.request().input('id', sql.VarChar, id).query("DELETE FROM Loans WHERE id = @id AND status = 'pending'");
+        await pool.query("DELETE FROM Loans WHERE id = $1 AND status = 'pending'", [id]);
         res.json({ message: 'Deleted' });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
 });
 
+// --- API Loans ---
 app.get('/api/loans', async (req, res) => {
     try {
         const customerId = req.query.customerId;
         let query = `
-            SELECT l.id, l.customerId, CAST(l.amount AS FLOAT) as amount, 
-                   CAST(l.interestRate AS FLOAT) as interestRate, l.durationMonths, 
-                   l.startDate, l.status, CAST(l.amountPaid AS FLOAT) as amountPaid, 
-                   l.nextPaymentDate, l.adminNote, u.name as customerName 
+            SELECT l.id, l."customerId", 
+                   l.amount::float as amount, 
+                   l."interestRate"::float as "interestRate", 
+                   l."durationMonths" as "durationMonths", 
+                   l."startDate" as "startDate", 
+                   l.status, 
+                   l."amountPaid"::float as "amountPaid", 
+                   l."nextPaymentDate" as "nextPaymentDate", 
+                   l."adminNote" as "adminNote", 
+                   u.name as "customerName" 
             FROM Loans l 
-            JOIN Users u ON l.customerId = u.id
+            JOIN Users u ON l."customerId" = u.id
         `;
-        const request = pool.request();
+        let params = [];
         if (customerId) {
-            query += ' WHERE l.customerId = @customerId';
-            request.input('customerId', sql.VarChar, customerId);
+            query += ' WHERE l."customerId" = $1';
+            params.push(customerId);
         }
         query += ' ORDER BY l.id DESC';
-        const result = await request.query(query);
-        res.json(result.recordset);
+        const result = await pool.query(query, params);
+        res.json(result.rows);
     } catch (err) {
+        console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -132,18 +140,11 @@ app.post('/api/loans', async (req, res) => {
     try {
         const { customerId, amount, interestRate, durationMonths } = req.body;
         const id = 'L' + Date.now();
-        await pool.request()
-            .input('id', sql.VarChar, id)
-            .input('customerId', sql.VarChar, customerId)
-            .input('amount', sql.Decimal(18,2), amount)
-            .input('interestRate', sql.Decimal(5,2), interestRate)
-            .input('durationMonths', sql.Int, durationMonths)
-            .input('status', sql.VarChar, 'pending')
-            .query(`
-                INSERT INTO Loans (id, customerId, amount, interestRate, durationMonths, status, amountPaid) 
-                VALUES (@id, @customerId, @amount, @interestRate, @durationMonths, @status, 0)
-            `);
-        res.status(201).json({ message: 'Created' });
+        await pool.query(
+            'INSERT INTO Loans (id, "customerId", amount, "interestRate", "durationMonths", status) VALUES ($1, $2, $3, $4, $5, $6)',
+            [id, customerId, amount, interestRate, durationMonths, 'pending']
+        );
+        res.status(201).json({ id });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
@@ -153,40 +154,33 @@ app.post('/api/loans', async (req, res) => {
 app.put('/api/loans/:id', async (req, res) => {
     try {
         const id = req.params.id;
-        const { status, amountPaid, nextPaymentDate, adminNote } = req.body;
+        const { status, adminNote, startDate, amountPaid, nextPaymentDate } = req.body;
         
-        let queryStr = 'UPDATE Loans SET status = @status';
-        let reqSql = pool.request()
-            .input('status', sql.VarChar, status)
-            .input('id', sql.VarChar, id);
-            
-        if (amountPaid !== undefined) {
-            queryStr += ', amountPaid = @amountPaid';
-            reqSql.input('amountPaid', sql.Decimal(18,2), amountPaid);
-        }
-        if (nextPaymentDate !== undefined) {
-             queryStr += ', nextPaymentDate = @nextPaymentDate';
-             reqSql.input('nextPaymentDate', sql.DateTime, nextPaymentDate ? new Date(nextPaymentDate) : null);
-        }
-        if (adminNote !== undefined) {
-             queryStr += ', adminNote = @adminNote';
-             reqSql.input('adminNote', sql.NVarChar, adminNote);
-        }
-        if (status === 'active' && req.body.startDate) {
-            queryStr += ', startDate = @startDate';
-            reqSql.input('startDate', sql.DateTime, new Date(req.body.startDate));
-        }
-        
-        queryStr += ' WHERE id = @id';
-        await reqSql.query(queryStr);
-        res.json({ message: 'Updated' });
+        let query = 'UPDATE Loans SET ';
+        const setClauses = [];
+        const params = [];
+        let count = 1;
+
+        if (status) { setClauses.push(`status = $${count++}`); params.push(status); }
+        if (adminNote !== undefined) { setClauses.push(`"adminNote" = $${count++}`); params.push(adminNote); }
+        if (startDate) { setClauses.push(`"startDate" = $${count++}`); params.push(startDate); }
+        if (amountPaid !== undefined) { setClauses.push(`"amountPaid" = $${count++}`); params.push(amountPaid); }
+        if (nextPaymentDate) { setClauses.push(`"nextPaymentDate" = $${count++}`); params.push(nextPaymentDate); }
+
+        if (setClauses.length === 0) return res.status(400).json({ message: 'No fields to update' });
+
+        query += setClauses.join(', ') + ` WHERE id = $${count} RETURNING *`;
+        params.push(id);
+
+        const result = await pool.query(query, params);
+        res.json(result.rows[0]);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Backend Server running at http://localhost:${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });

@@ -336,7 +336,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         showLoader();
         try {
-            await fetch('http://localhost:3000/api/loans', {
+            await fetch(`${Config.BASE_URL}/api/loans', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ 

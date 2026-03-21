@@ -1,4 +1,10 @@
-// mock data and user management
+// Global Diagnostic & Error Handler
+window.addEventListener('error', function(event) {
+    const errorMsg = `Lỗi hệ thống: ${event.message} tại ${event.filename}:${event.lineno}`;
+    console.error(errorMsg);
+    // document.body.innerHTML = `<div style="color:red; padding: 20px;"><h1>Đã xảy ra lỗi nạp trang</h1><p>${errorMsg}</p></div>`;
+});
+console.log("Diagnostic: data.js is loading...");
 
 const MOCK_USERS = [
     {
@@ -107,6 +113,7 @@ const DataService = {
 const checkAuth = (allowedRoles = []) => {
     const user = DataService.getCurrentUser();
     const token = localStorage.getItem('token');
+    console.log("Diagnostic: checkAuth called for roles:", allowedRoles);
     
     // Phải có cả User và Token mới coi là đã đăng nhập
     if (!user || !token) {

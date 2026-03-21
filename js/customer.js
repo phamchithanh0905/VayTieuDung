@@ -50,6 +50,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 fetch(`${Config.BASE_URL}/api/notifications`, { headers }),
                 fetch(`${Config.BASE_URL}/api/profile`, { headers })
             ]);
+            if (loansRes.status === 401 || profileRes.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('currentUser');
+                window.location.href = 'login.html?session=expired';
+                return;
+            }
             loans = await loansRes.json();
             const settings = await settingsRes.json();
             const notifs = await notifRes.json();

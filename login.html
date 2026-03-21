@@ -98,7 +98,17 @@
         document.addEventListener("DOMContentLoaded", () => {
             const user = DataService.getCurrentUser();
             if (user) {
-                window.location.href = user.role === 'admin' ? 'admin.html' : 'customer.html';
+                // Chỉ chuyển hướng nếu không phải là trường hợp mới logout/hết hạn
+                const urlParams = new URLSearchParams(window.location.search);
+                if (!urlParams.has('session')) {
+                    window.location.href = user.role === 'admin' ? 'admin.html' : 'customer.html';
+                }
+            }
+
+            // Kiểm tra session hết hạn
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('session') === 'expired') {
+                Toast.warn('Phiên làm việc đã hết hạn! Vui lòng đăng nhập lại để tiếp tục 24/24.');
             }
 
             // Tab switching logic

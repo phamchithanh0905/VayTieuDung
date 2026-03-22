@@ -135,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
         container.innerHTML = settings.map(s => `
             <div style="display:flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--border-color);">
                 <div>
-                    <strong style="display:block;">${s.name || 'Gói Vay'}</strong>
+                    <strong style="display:block;">${s.name || `Gói Lãi suất ${s.value_int}%`}</strong>
                     <small style="color: var(--text-secondary)">Lãi suất: ${s.value_int}%/tháng</small>
                 </div>
                 <div class="form-check form-switch">

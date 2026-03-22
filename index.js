@@ -36,9 +36,24 @@ const pool = new Pool({
     }
 });
 
-pool.connect((err) => {
-    if (err) console.error('Lỗi kết nối database:', err.stack);
-    else console.log('Đã kết nối thành công tới Supabase PostgreSQL');
+pool.connect(async (err) => {
+    if (err) {
+        console.error('Lỗi kết nối database:', err.stack);
+    } else {
+        console.log('Đã kết nối thành công tới Supabase PostgreSQL');
+        // Auto-seed required rates 5, 6, 8, 10, 15, 17, 20
+        try {
+            const rates = [5, 6, 8, 10, 15, 17, 20];
+            for (const r of rates) {
+                await pool.query(
+                    'INSERT INTO SystemSettings (key, value_int, is_active) VALUES ($1, $2, TRUE) ON CONFLICT (key) DO NOTHING',
+                    [`rate_${r}`, r]
+                );
+            }
+        } catch (seedErr) {
+            console.error('Seeding rates error:', seedErr.message);
+        }
+    }
 });
 
 // Middleware xác thực Token (Đã đưa lên trên để tránh lỗi Hoisting)

@@ -65,9 +65,13 @@ VALUES ('L001', 'U002', 50000000, 12, 12, '2023-01-15 00:00:00', 'active', 25000
 INSERT INTO Loans (id, "customerId", amount, "interestRate", "durationMonths", "startDate", status, "amountPaid", "nextPaymentDate")
 VALUES ('L002', 'U003', 100000000, 10, 24, '2023-05-10 00:00:00', 'pending', 0, NULL);
 
+INSERT INTO SystemSettings (key, value_int, is_active) VALUES ('rate_5', 5, TRUE);
+INSERT INTO SystemSettings (key, value_int, is_active) VALUES ('rate_6', 6, TRUE);
+INSERT INTO SystemSettings (key, value_int, is_active) VALUES ('rate_8', 8, TRUE);
 INSERT INTO SystemSettings (key, value_int, is_active) VALUES ('rate_10', 10, TRUE);
 INSERT INTO SystemSettings (key, value_int, is_active) VALUES ('rate_15', 15, TRUE);
 INSERT INTO SystemSettings (key, value_int, is_active) VALUES ('rate_17', 17, TRUE);
+INSERT INTO SystemSettings (key, value_int, is_active) VALUES ('rate_20', 20, TRUE);
 
 INSERT INTO Notifications (message) VALUES ('Chào mừng bạn đến với MyFinance v2.0');
 INSERT INTO Notifications (message) VALUES ('Bảo mật tài khoản đã được kích hoạt.');

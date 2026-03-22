@@ -177,7 +177,7 @@
                         <h3>Gửi thông báo tới toàn bộ khách hàng</h3>
                         <form id="sendNotificationForm" style="margin-top: 1.5rem;">
                             <div class="form-group">
-                                <label class="form-label">Nội dung thông báo</label>
+                                <label class="form-label" for="notifMessage">Nội dung thông báo</label>
                                 <textarea class="form-control" id="notifMessage" rows="4" placeholder="Nhập tin nhắn..." required></textarea>
                             </div>
                             <button type="submit" class="btn btn-primary" style="width: 100%;">
@@ -252,11 +252,11 @@
                 <p>Khách hàng: <strong id="modalCustomerName"></strong></p>
                 <p>Số tiền: <strong id="modalAmount"></strong></p>
                 <div class="form-group" style="margin-top: 1.5rem; display: none;" id="modalNextDateGroup">
-                    <label class="form-label">Ngày đến hạn thanh toán:</label>
+                    <label class="form-label" for="modalNextDate">Ngày đến hạn thanh toán:</label>
                     <input type="date" id="modalNextDate" class="form-control">
                 </div>
                 <div class="form-group" style="margin-top: 1.5rem;">
-                    <label class="form-label">Ghi chú từ Admin (không bắt buộc):</label>
+                    <label class="form-label" for="modalAdminNote">Ghi chú từ Admin (không bắt buộc):</label>
                     <textarea id="modalAdminNote" class="form-control" rows="3" placeholder="Nhập lý do duyệt/từ chối hoặc lời nhắn tới khách hàng..."></textarea>
                 </div>
                 <p style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.85rem;">Bạn muốn thực hiện thao tác gì với khoản vay này?</p>

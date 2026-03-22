@@ -258,13 +258,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 actionBtn = `<span class="text-secondary">-</span>`;
             }
             
+            const nextDate = loan.nextPaymentDate ? new Date(loan.nextPaymentDate).toLocaleDateString('vi-VN') : '-';
+            const isOverdue = loan.status === 'active' && loan.nextPaymentDate && new Date(loan.nextPaymentDate) < new Date();
+            
             return `
-            <tr>
+            <tr style="${isOverdue ? 'background: rgba(230, 57, 70, 0.05); border-left: 2px solid var(--danger-color);' : ''}">
                 <td>${loan.id}</td>
                 <td>${loan.customerName}</td>
                 <td><small>Gốc:</small> ${formatCurrency(loan.amount)}<br><small>Tổng (Lãi+Gốc):</small> <strong style="color:var(--primary-color)">${formatCurrency(calculateLoanSummary(loan.amount, loan.interestRate, loan.durationMonths).totalPayable)}</strong></td>
                 <td>${loan.interestRate}%</td>
                 <td>${loan.durationMonths} Tháng</td>
+                <td><span style="${isOverdue ? 'color: var(--danger-color); font-weight: bold;' : ''}">${nextDate}</span></td>
                 <td>${getStatusBadge(loan.status)}</td>
                 <td>${actionBtn}</td>
             </tr>
@@ -350,17 +354,26 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('modalAmount').textContent = formatCurrency(calculateLoanSummary(loan.amount, loan.interestRate, loan.durationMonths).totalPayable) + ' (Tổng Gốc + Lãi)';
         document.getElementById('modalAdminNote').value = loan.adminNote || '';
         
-        const btnApprove = document.getElementById('btnApprove');
-        const btnReject = document.getElementById('btnReject');
+        const dateGroup = document.getElementById('modalNextDateGroup');
+        const nextDateInput = document.getElementById('modalNextDate');
         
         if (loan.status === 'pending') {
             btnApprove.innerHTML = '<i class="fas fa-check"></i> Duyệt Vay';
             btnApprove.style.background = 'var(--success-color)';
             btnReject.style.display = 'inline-block';
+            dateGroup.style.display = 'none';
         } else if (loan.status === 'active') {
-            btnApprove.innerHTML = '<i class="fas fa-check-double"></i> Xác Nhận Tất Toán Toàn Bộ';
+            btnApprove.innerHTML = '<i class="fas fa-save"></i> Cập Nhật Hạn & Lưu';
             btnApprove.style.background = 'var(--primary-color)';
-            btnReject.style.display = 'none';
+            btnReject.innerHTML = '<i class="fas fa-check-double"></i> Xác Nhận Tất Toán Toàn Bộ';
+            btnReject.style.background = 'var(--success-color)';
+            btnReject.style.display = 'inline-block';
+            dateGroup.style.display = 'block';
+            if (loan.nextPaymentDate) {
+                nextDateInput.value = new Date(loan.nextPaymentDate).toISOString().split('T')[0];
+            } else {
+                nextDateInput.value = '';
+            }
         }
         
         loanModal.classList.add('active');
@@ -381,7 +394,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('btnApprove').addEventListener('click', async () => {
         if(!currentActionLoanId) return;
         
-        let updateData = {};
+        const nextDateVal = document.getElementById('modalNextDate').value;
+
         if (currentLoanStatus === 'pending') {
             updateData = { 
                 status: 'active', 
@@ -389,12 +403,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 nextPaymentDate: new Date(Date.now() + 30*24*60*60*1000).toISOString()
             };
         } else if (currentLoanStatus === 'active') {
-            const loan = loans.find(l => l.id == currentActionLoanId);
-            const summary = calculateLoanSummary(loan.amount, loan.interestRate, loan.durationMonths);
-            updateData = { 
-                status: 'paid',
-                amountPaid: summary.totalPayable
-            };
+            // Cập nhật ngày hạn hoặc ghi chú
+            updateData = { status: 'active' };
+            if (nextDateVal) updateData.nextPaymentDate = new Date(nextDateVal).toISOString();
         }
 
         updateData.adminNote = document.getElementById('modalAdminNote').value;
@@ -418,24 +429,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById('btnReject').addEventListener('click', async () => {
         if(!currentActionLoanId) return;
+        
+        let updateData = { adminNote: document.getElementById('modalAdminNote').value };
+        let msg = 'Đã thực hiện';
+        let isReject = true;
+        
+        if (currentLoanStatus === 'pending') {
+            updateData.status = 'rejected';
+            msg = 'Đã từ chối khoản vay';
+        } else if (currentLoanStatus === 'active') {
+            const loan = loans.find(l => l.id == currentActionLoanId);
+            const summary = calculateLoanSummary(loan.amount, loan.interestRate, loan.durationMonths);
+            updateData.status = 'paid';
+            updateData.amountPaid = summary.totalPayable;
+            msg = 'Đã tất toán toàn bộ khoản vay';
+            isReject = false;
+        }
+
         showLoader();
         try {
             await fetch(`${Config.BASE_URL}/api/loans/${currentActionLoanId}`, {
                 method: 'PUT',
                 headers,
-                body: JSON.stringify({ 
-                    status: 'rejected',
-                    adminNote: document.getElementById('modalAdminNote').value
-                })
+                body: JSON.stringify(updateData)
             });
             closeModal();
-            Toast.warn('Đã từ chối khoản vay');
+            if(isReject) Toast.warn(msg); else Toast.success(msg);
             fetchAllData();
-        } catch (err) {
-            Toast.error('Lỗi khi từ chối');
-        } finally {
-            hideLoader();
-        }
+        } catch (err) { Toast.error('Lỗi khi thực hiện'); }
+        finally { hideLoader(); }
     });
 
     // Navigation & Logic

@@ -128,6 +128,7 @@
                                         <th>Số Tiền (VNĐ)</th>
                                         <th>Lãi Suất</th>
                                         <th>Kỳ Hạn</th>
+                                        <th>Ngày Đến Hạn</th>
                                         <th>Trạng Thái</th>
                                         <th>Hành Động</th>
                                     </tr>
@@ -219,6 +220,10 @@
             <div class="modal-body">
                 <p>Khách hàng: <strong id="modalCustomerName"></strong></p>
                 <p>Số tiền: <strong id="modalAmount"></strong></p>
+                <div class="form-group" style="margin-top: 1.5rem; display: none;" id="modalNextDateGroup">
+                    <label class="form-label">Ngày đến hạn thanh toán:</label>
+                    <input type="date" id="modalNextDate" class="form-control">
+                </div>
                 <div class="form-group" style="margin-top: 1.5rem;">
                     <label class="form-label">Ghi chú từ Admin (không bắt buộc):</label>
                     <textarea id="modalAdminNote" class="form-control" rows="3" placeholder="Nhập lý do duyệt/từ chối hoặc lời nhắn tới khách hàng..."></textarea>

@@ -250,6 +250,20 @@ document.addEventListener("DOMContentLoaded", () => {
             if (loan.status === 'pending') {
                 pendingCount++;
             }
+            
+            if (loan.status === 'active' && loan.nextPaymentDate) {
+                const dueDate = new Date(loan.nextPaymentDate);
+                const diffDays = Math.ceil((dueDate - new Date()) / (1000 * 60 * 60 * 24));
+                if (diffDays <= 3 && diffDays >= 0) {
+                    setTimeout(() => {
+                        Toast.warn(`Khoản vay ${loan.id} sắp đến ngày thanh toán (còn ${diffDays} ngày)!`, 10000);
+                    }, 1000);
+                } else if (diffDays < 0) {
+                    setTimeout(() => {
+                        Toast.error(`Khoản vay ${loan.id} đã quá hạn ${Math.abs(diffDays)} ngày! Vui lòng thanh toán ngay.`, 15000);
+                    }, 1500);
+                }
+            }
         });
 
         document.getElementById('totalDebtStat').textContent = formatCurrency(totalDebt);

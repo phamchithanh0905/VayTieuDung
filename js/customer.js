@@ -266,9 +266,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const maturityDate = new Date(startDate);
             maturityDate.setMonth(maturityDate.getMonth() + parseInt(s.term_months));
 
-            // Tính lợi nhuận dự kiến
-            const monthlyRate = s.rate / 100 / 12;
-            const expectedProfit = s.amount * monthlyRate * s.term_months;
+            // Tính lợi nhuận dự kiến theo kỳ hạn (không chia theo năm)
+            const expectedProfit = s.amount * (s.rate / 100);
 
             let actionHtml = '';
             if (s.status === 'approved') {
@@ -290,7 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px;">
                         <div>
                             <small style="display: block; color: var(--text-secondary); margin-bottom: 4px;">Lãi suất</small>
-                            <strong style="color: var(--success-color);">${s.rate}%/Năm</strong>
+                            <strong style="color: var(--success-color);">${s.rate}% / ${s.term_months} Tháng</strong>
                         </div>
                         <div>
                             <small style="display: block; color: var(--text-secondary); margin-bottom: 4px;">Lợi nhuận dự kiến</small>
@@ -349,7 +348,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.getElementById('depositSavingsId').textContent = 'TK' + s.id;
         document.getElementById('depositAmount').textContent = formatCurrency(s.amount);
-        document.getElementById('depositRate').textContent = s.rate + '% / Năm';
+        document.getElementById('depositRate').textContent = s.rate + '% / ' + s.term_months + ' Tháng';
         
         const bName = systemSettings.find(st => st.key === 'bank_name')?.value_text || 'MBBank';
         const bAcc = systemSettings.find(st => st.key === 'bank_account')?.value_text || '0888101901';
@@ -933,13 +932,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (amount >= 1000000) {
             const rate = calculateSavingsRate(amount, months);
-            const interest = amount * (rate / 100) * (months / 12);
+            // Tính lãi suất trực tiếp theo kỳ hạn (không chia 12) theo yêu cầu
+            const interest = amount * (rate / 100);
             const total = amount + interest;
 
             display.innerHTML = `
                 <div style="text-align:center; margin-bottom:1rem;">
-                    <div style="color:var(--text-secondary); font-size:0.8rem;">LÃI SUẤT ÁP DỤNG</div>
-                    <div style="font-size:1.8rem; font-weight:800; color:var(--success-color);">${rate}% <small style="font-size:0.9rem;">/ Năm</small></div>
+                    <div style="color:var(--text-secondary); font-size:0.8rem;">LÃI SUẤT ÁP DỤNG (${months} THÁNG)</div>
+                    <div style="font-size:1.8rem; font-weight:800; color:var(--success-color);">${rate}% <small style="font-size:0.9rem;">/ ${months} Tháng</small></div>
                 </div>
                 <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
                     <span>Tiền lãi dự kiến:</span>

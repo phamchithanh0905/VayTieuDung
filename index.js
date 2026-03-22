@@ -60,10 +60,18 @@ pool.connect(async (err) => {
             } catch (e) { /* Bỏ qua nếu đã có */ }
 
             try {
-                // 3. Thêm ràng buộc UNIQUE cho cột 'key' để lệnh ON CONFLICT hoạt động
+                // 3. Đảm bảo cột ID tự động tăng (Fix lỗi null value in column id)
+                await pool.query("CREATE SEQUENCE IF NOT EXISTS systemsettings_id_seq");
+                await pool.query("ALTER TABLE SystemSettings ALTER COLUMN id SET DEFAULT nextval('systemsettings_id_seq')");
+                console.log('Đã cấu hình ID tự động tăng thành công.');
+            } catch (e) { /* Đã có, bỏ qua */ }
+
+            try {
+                // 4. Thêm ràng buộc UNIQUE cho cột 'key'
                 await pool.query("ALTER TABLE SystemSettings ADD CONSTRAINT systemsettings_key_unique UNIQUE (\"key\")");
                 console.log('Đã thêm ràng buộc UNIQUE thành công.');
-            } catch (e) { /* Đã có ràng buộc, bỏ qua */ }
+            } catch (e) { /* Đã có, bỏ qua */ }
+
 
 
             const rates = [5, 6, 8, 10, 15, 17, 20];

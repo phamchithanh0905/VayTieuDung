@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
+const path = require('path');
 
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || 'secret_key_vaytieudung_2024';
@@ -16,6 +17,17 @@ app.use(helmet({
 }));
 app.use(cors());
 app.use(express.json());
+
+// Phục vụ file tĩnh an toàn cho Frontend
+app.use(express.static(__dirname, {
+    index: false, // Tắt tự động bắt index.html để route thủ công bên dưới
+    extensions: ['html', 'css', 'js']
+}));
+
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/login.html', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
+app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
+app.get('/customer.html', (req, res) => res.sendFile(path.join(__dirname, 'customer.html')));
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,

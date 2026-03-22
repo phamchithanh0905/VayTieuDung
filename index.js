@@ -46,14 +46,14 @@ pool.connect(async (err) => {
             const rates = [5, 6, 8, 10, 15, 17, 20];
             for (const r of rates) {
                 await pool.query(
-                    'INSERT INTO SystemSettings (key, value_int, is_active) VALUES ($1, $2, TRUE) ON CONFLICT (key) DO NOTHING',
+                    'INSERT INTO SystemSettings ("key", value_int, is_active) VALUES ($1, $2, TRUE) ON CONFLICT ("key") DO NOTHING',
                     [`rate_${r}`, r]
                 );
             }
             // Auto-seed banking info
-            await pool.query('INSERT INTO SystemSettings (key, value_text) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING', ['bank_name', 'MBBank']);
-            await pool.query('INSERT INTO SystemSettings (key, value_text) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING', ['bank_account', '0888101901']);
-            await pool.query('INSERT INTO SystemSettings (key, value_text) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING', ['bank_holder', 'PHAM CHI THANH']);
+            await pool.query('INSERT INTO SystemSettings ("key", value_text) VALUES ($1, $2) ON CONFLICT ("key") DO NOTHING', ['bank_name', 'MBBank']);
+            await pool.query('INSERT INTO SystemSettings ("key", value_text) VALUES ($1, $2) ON CONFLICT ("key") DO NOTHING', ['bank_account', '0888101901']);
+            await pool.query('INSERT INTO SystemSettings ("key", value_text) VALUES ($1, $2) ON CONFLICT ("key") DO NOTHING', ['bank_holder', 'PHAM CHI THANH']);
         } catch (seedErr) {
             console.error('Seeding error:', seedErr.message);
         }

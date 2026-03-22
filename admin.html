@@ -30,6 +30,7 @@
                 <li data-view="users"><i class="fas fa-users"></i> Khách Hàng</li>
                 <li data-view="notifs"><i class="fas fa-bullhorn"></i> Gửi Thông Báo</li>
                 <li data-view="savings-admin"><i class="fas fa-piggy-bank"></i> Duyệt Gửi Tiết Kiệm</li>
+                <li data-view="savings-manage"><i class="fas fa-tasks"></i> Quản Lý Gửi Tiết Kiệm</li>
                 <li data-view="payments"><i class="fas fa-check-circle"></i> Duyệt Thanh Toán</li>
                 <li data-view="settings"><i class="fas fa-cogs"></i> Cài Đặt Gói Vay</li>
 
@@ -276,6 +277,34 @@
                     </div>
                 </div>
 
+                <!-- Savings Manage View -->
+                <div id="savings-manageView" class="view-section">
+                    <div class="glass-panel p-2">
+                        <div class="page-header">
+                            <h1><i class="fas fa-tasks"></i> Quản Lý Gửi Tiết Kiệm</h1>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table" style="width: 100%; min-width: 1000px; border-collapse: collapse;">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px; padding: 1rem 0.5rem;">ID</th>
+                                        <th style="width: 150px; padding: 1rem 0.5rem;">Ngày Gửi</th>
+                                        <th style="width: 180px; padding: 1rem 0.5rem;">Khách Hàng</th>
+                                        <th style="width: 150px; padding: 1rem 0.5rem;">Số Tiền</th>
+                                        <th style="width: 100px; padding: 1rem 0.5rem;">Lãi Suất</th>
+                                        <th style="width: 100px; padding: 1rem 0.5rem;">Kỳ Hạn</th>
+                                        <th style="width: 150px; padding: 1rem 0.5rem;">Trạng Thái</th>
+                                        <th style="width: 100px; padding: 1rem 0.5rem;">Hành Động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="savingsManageTableBody">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </main>
     </div>
@@ -342,6 +371,11 @@
                 <p>Khách hàng: <strong id="savingsModalCustomer"></strong></p>
                 <p>Số tiền gửi: <strong id="savingsModalAmount"></strong></p>
                 <p>Lãi suất: <strong id="savingsModalRate"></strong></p>
+
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label class="form-label" for="savingsModalDate">Ngày Gửi Tiền (Tính lãi từ ngày này):</label>
+                    <input type="date" id="savingsModalDate" class="form-control">
+                </div>
 
                 <div class="form-group" style="margin-top: 1rem;">
                     <label class="form-label">Ghi chú của Admin:</label>

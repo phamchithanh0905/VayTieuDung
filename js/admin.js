@@ -12,6 +12,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let loans = [];
     let users = [];
+    let systemSettings = [];
+    let savings = [];
     let payments = [];
 
 
@@ -48,12 +50,13 @@ document.addEventListener("DOMContentLoaded", () => {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
 
-            const [usersRes, loansRes, settingsRes, notifRes, paymentsRes] = await Promise.all([
-                fetch(`${Config.BASE_URL}/api/users`, { headers, signal: controller.signal }),
+            const [loansRes, settingsRes, usersRes, paymentsRes, savingsRes, notifRes] = await Promise.all([
                 fetch(`${Config.BASE_URL}/api/loans`, { headers, signal: controller.signal }),
                 fetch(`${Config.BASE_URL}/api/settings`, { headers, signal: controller.signal }),
-                fetch(`${Config.BASE_URL}/api/notifications`, { headers, signal: controller.signal }),
-                fetch(`${Config.BASE_URL}/api/payments`, { headers, signal: controller.signal })
+                fetch(`${Config.BASE_URL}/api/users`, { headers, signal: controller.signal }),
+                fetch(`${Config.BASE_URL}/api/payments`, { headers, signal: controller.signal }),
+                fetch(`${Config.BASE_URL}/api/savings`, { headers, signal: controller.signal }),
+                fetch(`${Config.BASE_URL}/api/notifications`, { headers, signal: controller.signal })
             ]);
 
             
@@ -66,15 +69,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
             
-            if (usersRes.ok) users = await usersRes.json();
             if (loansRes.ok) loans = await loansRes.json();
+            if (settingsRes.ok) systemSettings = await settingsRes.json();
+            if (usersRes.ok) users = await usersRes.json();
             if (paymentsRes.ok) payments = await paymentsRes.json();
+            if (savingsRes.ok) savings = await savingsRes.json();
             
             refreshUI();
 
-            if (settingsRes.ok) renderSettings(await settingsRes.json());
             if (notifRes.ok) renderNotifHistory(await notifRes.json());
-            if (paymentsRes.ok) renderPayments(payments);
 
                 
         } catch (err) {
@@ -134,17 +137,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    const renderSettings = (settings) => {
+    const renderSettings = () => {
         const ratesContainer = document.getElementById('ratesContainer');
         const bankContainer = document.getElementById('bankSettingsContainer');
         if (!ratesContainer || !bankContainer) return;
         
-        if (!Array.isArray(settings)) {
+        if (!Array.isArray(systemSettings)) {
             ratesContainer.innerHTML = '<p style="color:var(--text-secondary)">Lỗi nạp dữ liệu cài đặt.</p>';
             return;
         }
 
-        const ratesHtml = settings.filter(s => !s.key.startsWith('bank_')).map(s => `
+        const ratesHtml = systemSettings.filter(s => !s.key.startsWith('bank_')).map(s => `
             <div style="display:flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--border-color);">
                 <div>
                     <strong style="display:block;">${s.name || `Gói Lãi suất ${s.value_int || 0}%`}</strong>
@@ -155,7 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             </div>`).join('');
 
-        const bankHtml = settings.filter(s => s.key.startsWith('bank_')).map(s => {
+        const bankHtml = systemSettings.filter(s => s.key.startsWith('bank_')).map(s => {
             let name = s.key;
             if (s.key === 'bank_name') name = 'Tên Ngân Hàng';
             if (s.key === 'bank_account') name = 'Số Tài Khoản';
@@ -201,15 +204,15 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
-    const renderPayments = (list) => {
+    const renderPayments = () => {
         const tb = document.getElementById('paymentsTableBody');
         if (!tb) return;
-        if (!Array.isArray(list) || list.length === 0) {
+        if (!Array.isArray(payments) || payments.length === 0) {
             tb.innerHTML = '<tr><td colspan="7" style="text-align:center">Chưa có yêu cầu thanh toán nào.</td></tr>';
             return;
         }
 
-        tb.innerHTML = list.map(p => {
+        tb.innerHTML = payments.map(p => {
             const statusText = p.status === 'pending' ? '<span class="badge badge-pending">Chờ duyệt</span>' : 
                                (p.status === 'confirmed' ? '<span class="badge badge-paid">Thành công</span>' : '<span class="badge badge-rejected">Đã hủy</span>');
             
@@ -270,14 +273,15 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const refreshUI = () => {
-
-        renderDashboardStats();
-        renderRecentLoans();
+        renderStats();
         renderAllLoans();
         renderUsers();
+        renderSettings();
+        renderPayments();
+        renderSavingsAdmin();
     };
 
-    const renderDashboardStats = () => {
+    const renderStats = () => {
         document.getElementById('totalUsersStat').textContent = Array.isArray(users) ? users.length : 0;
         
         const statusCounts = { active: 0, pending: 0, rejected: 0, paid: 0 };
@@ -640,6 +644,88 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem('theme', t);
         themeBtn.innerHTML = t==='dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
     });
+
+    // Savings Admin Logic
+    const renderSavingsAdmin = () => {
+        const tb = document.getElementById('savingsAdminTableBody');
+        if (!tb) return;
+
+        if (savings.length === 0) {
+            tb.innerHTML = '<tr><td colspan="7" class="text-center">Không có yêu cầu nào.</td></tr>';
+            return;
+        }
+
+        tb.innerHTML = savings.map(s => `
+            <tr>
+                <td>#${s.id}</td>
+                <td><strong>${s.customerName || 'N/A'}</strong></td>
+                <td>${formatCurrency(s.amount)}</td>
+                <td><span class="badge badge-active">${s.rate}%</span></td>
+                <td>${s.term_months} Tháng</td>
+                <td>${getStatusBadge(s.status)}</td>
+                <td>
+                    ${s.status === 'pending' ? `
+                        <button class="btn btn-primary btn-sm btn-action-savings" data-id="${s.id}">
+                            <i class="fas fa-edit"></i> Duyệt
+                        </button>
+                    ` : '<span class="text-secondary">-</span>'}
+                </td>
+            </tr>
+        `).join('');
+    };
+
+    let currentActionSavingsId = null;
+    const savingsModal = document.getElementById('savingsActionModal');
+
+    document.getElementById('savingsAdminTableBody')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-action-savings');
+        if (btn) openSavingsModal(btn.dataset.id);
+    });
+
+    const openSavingsModal = (id) => {
+        currentActionSavingsId = id;
+        const item = savings.find(s => s.id == id);
+        
+        document.getElementById('savingsModalId').textContent = item.id;
+        document.getElementById('savingsModalCustomer').textContent = item.customerName;
+        document.getElementById('savingsModalAmount').textContent = formatCurrency(item.amount);
+        document.getElementById('savingsModalRate').textContent = item.rate + '% / Năm';
+        document.getElementById('savingsModalNote').value = item.adminNote || '';
+
+        savingsModal.classList.add('active');
+    };
+
+    const closeSavingsModal = () => savingsModal.classList.remove('active');
+    savingsModal?.querySelector('.close-btn').addEventListener('click', closeSavingsModal);
+
+    const updateSavingsStatus = async (status) => {
+        if (!currentActionSavingsId) return;
+        const adminNote = document.getElementById('savingsModalNote').value;
+
+        showLoader();
+        try {
+            const res = await fetch(`${Config.BASE_URL}/api/savings/${currentActionSavingsId}`, {
+                method: 'PUT',
+                headers,
+                body: JSON.stringify({ status, adminNote })
+            });
+
+            if (res.ok) {
+                Toast.success('Đã cập nhật yêu cầu tích lũy.');
+                closeSavingsModal();
+                fetchAllData();
+            } else {
+                Toast.error('Lỗi khi cập nhật.');
+            }
+        } catch (err) {
+            Toast.error('Lỗi kết nối.');
+        } finally {
+            hideLoader();
+        }
+    };
+
+    document.getElementById('btnApproveSavings')?.addEventListener('click', () => updateSavingsStatus('approved'));
+    document.getElementById('btnRejectSavings')?.addEventListener('click', () => updateSavingsStatus('rejected'));
 
     // Init
     fetchAllData();

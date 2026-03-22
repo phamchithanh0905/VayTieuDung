@@ -32,6 +32,7 @@
                 <li class="active" data-view="dashboard"><i class="fas fa-home"></i> Tổng quan</li>
                 <li data-view="apply"><i class="fas fa-plus-circle"></i> Đăng ký vay</li>
                 <li data-view="myloans"><i class="fas fa-history"></i> Khoản vay của tôi</li>
+                <li data-view="savings"><i class="fas fa-piggy-bank"></i> <span>Gửi Tiết Kiệm</span></li>
                 <li data-view="notifications"><i class="fas fa-bell"></i> Thông báo hệ thống</li>
                 <li data-view="profile"><i class="fas fa-user-circle"></i> Thông tin cá nhân</li>
             </ul>
@@ -51,11 +52,98 @@
                             <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
                         </div>
                     </div>
-                </div>
-            </nav>
+                </nav>
 
             <div class="container">
-                <!-- System Notifications View -->
+                <!-- Savings View -->
+            <section id="savingsView" class="view-section">
+                <div class="glass-panel p-2 mb-2">
+                    <h2 class="view-title"><i class="fas fa-piggy-bank"></i> Gửi Tiết Kiệm Tích Lũy</h2>
+                    <p style="color:var(--text-secondary)">Lãi suất cực cao, an toàn tuyệt đối. Hãy để tiền của bạn sinh lời mỗi ngày.</p>
+                </div>
+
+                <div class="row">
+                    <!-- Calculator -->
+                    <div class="col-md-5">
+                        <div class="glass-panel p-2">
+                            <h3 style="color:var(--primary-color); margin-bottom:1.5rem;"><i class="fas fa-calculator"></i> Tính Toán Lợi Nhuận</h3>
+                            <form id="savingsForm">
+                                <div class="form-group">
+                                    <label class="form-label">Số Tiền Muốn Gửi (VNĐ)</label>
+                                    <input type="text" class="form-control" id="savingsAmountInput" placeholder="Ví dụ: 10,000,000" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Kỳ Hạn Gửi</label>
+                                    <div style="display: flex; gap: 1rem;">
+                                        <label class="radio-card" style="flex: 1;">
+                                            <input type="radio" name="termMonths" value="6" checked>
+                                            <div class="radio-content">
+                                                <span>6 Tháng</span>
+                                            </div>
+                                        </label>
+                                        <label class="radio-card" style="flex: 1;">
+                                            <input type="radio" name="termMonths" value="12">
+                                            <div class="radio-content">
+                                                <span>12 Tháng (1 Năm)</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div id="savingsEstimateDisplay" class="glass-panel" style="margin-top: 2rem; padding: 1.5rem; background: rgba(var(--success-rgb), 0.05); border: 1px dashed var(--success-color);">
+                                    <!-- Dynamic estimate -->
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100" style="margin-top: 1.5rem;">Gửi Yêu Cầu Tích Lũy</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- History -->
+                    <div class="col-md-7">
+                        <div class="glass-panel p-2">
+                            <h3 style="margin-bottom:1.5rem;"><i class="fas fa-history"></i> Lịch Sử Gửi Tiết Kiệm</h3>
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Ngày Gửi</th>
+                                            <th>Số Vốn</th>
+                                            <th>Lãi Suất</th>
+                                            <th>Kỳ Hạn</th>
+                                            <th>Trạng Thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="savingsTableBody">
+                                        <tr><td colspan="5" class="text-center">Đang tải dữ liệu...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <style>
+                    .radio-card input { display: none; }
+                    .radio-card .radio-content {
+                        padding: 1rem;
+                        background: var(--surface-color);
+                        border: 1px solid var(--border-color);
+                        border-radius: 8px;
+                        text-align: center;
+                        cursor: pointer;
+                        transition: all 0.3s;
+                    }
+                    .radio-card input:checked + .radio-content {
+                        border-color: var(--primary-color);
+                        background: rgba(var(--primary-rgb), 0.1);
+                        color: var(--primary-color);
+                        font-weight: 700;
+                    }
+                </style>
+            </section>
+
+            <!-- Notifications View -->
                 <div class="view-section" id="notificationsView">
                     <div class="page-header">
                         <h1>Thông Báo Hệ Thống</h1>

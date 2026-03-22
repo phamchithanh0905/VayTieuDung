@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     let loans = [];
+    let savings = [];
     let userProfile = null;
     let systemSettings = [];
 
@@ -59,11 +60,12 @@ document.addEventListener("DOMContentLoaded", () => {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout (Render cold start)
 
-            const [loansRes, settingsRes, notifRes, profileRes] = await Promise.all([
+            const [loansRes, settingsRes, notifRes, profileRes, savingsRes] = await Promise.all([
                 fetch(`${Config.BASE_URL}/api/loans?customerId=${currentUser.id}`, { headers, signal: controller.signal }),
                 fetch(`${Config.BASE_URL}/api/settings`, { headers, signal: controller.signal }),
                 fetch(`${Config.BASE_URL}/api/notifications`, { headers, signal: controller.signal }),
-                fetch(`${Config.BASE_URL}/api/profile`, { headers, signal: controller.signal })
+                fetch(`${Config.BASE_URL}/api/profile`, { headers, signal: controller.signal }),
+                fetch(`${Config.BASE_URL}/api/savings?customerId=${currentUser.id}`, { headers, signal: controller.signal })
             ]);
 
             clearTimeout(timeoutId);
@@ -80,6 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
             updateDurationOptions(systemSettings);
             renderNotifications(await notifRes.json());
             userProfile = await profileRes.json();
+            savings = await savingsRes.json();
             
             renderProfile();
             refreshUI();
@@ -239,6 +242,27 @@ document.addEventListener("DOMContentLoaded", () => {
         renderDashboardStats();
         renderUpcomingPayments();
         renderMyLoans();
+        renderSavings();
+    };
+
+    const renderSavings = () => {
+        const tb = document.getElementById('savingsTableBody');
+        if (!tb) return;
+
+        if (savings.length === 0) {
+            tb.innerHTML = '<tr><td colspan="5" style="text-align: center;">Bạn chưa có khoản tiết kiệm nào.</td></tr>';
+            return;
+        }
+
+        tb.innerHTML = savings.map(s => `
+            <tr>
+                <td>${new Date(s.createdAt).toLocaleDateString('vi-VN')}</td>
+                <td><strong>${formatCurrency(s.amount)}</strong></td>
+                <td><span class="badge badge-active">${s.rate}%</span></td>
+                <td>${s.term_months} Tháng</td>
+                <td>${getStatusBadge(s.status)}</td>
+            </tr>
+        `).join('');
     };
     const renderDashboardStats = () => {
         let totalDebt = 0;
@@ -716,6 +740,99 @@ document.addEventListener("DOMContentLoaded", () => {
         document.documentElement.setAttribute('data-theme', t);
         localStorage.setItem('theme', t);
         themeBtn.innerHTML = t==='dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    });
+
+    // Savings Logic
+    const calculateSavingsRate = (amount, months) => {
+        // Bảng lãi suất từ hình ảnh:
+        // < 10tr: 12% (6th), 16% (12th)
+        // 10-50tr: 10% (6th), 14% (12th)
+        // > 50tr: 9% (6th), 12% (12th)
+        if (months == 6) {
+            if (amount < 10000000) return 12;
+            if (amount <= 50000000) return 10;
+            return 9;
+        } else {
+            if (amount < 10000000) return 16;
+            if (amount <= 50000000) return 14;
+            return 12;
+        }
+    };
+
+    const updateSavingsEstimate = () => {
+        const amountInput = document.getElementById('savingsAmountInput');
+        const termInput = document.querySelector('input[name="termMonths"]:checked');
+        const display = document.getElementById('savingsEstimateDisplay');
+        if (!amountInput || !termInput || !display) return;
+
+        const rawVal = amountInput.value.replace(/\D/g, "");
+        const amount = parseFloat(rawVal);
+        const months = parseInt(termInput.value);
+
+        if (amount >= 1000000) {
+            const rate = calculateSavingsRate(amount, months);
+            const interest = amount * (rate / 100) * (months / 12);
+            const total = amount + interest;
+
+            display.innerHTML = `
+                <div style="text-align:center; margin-bottom:1rem;">
+                    <div style="color:var(--text-secondary); font-size:0.8rem;">LÃI SUẤT ÁP DỤNG</div>
+                    <div style="font-size:1.8rem; font-weight:800; color:var(--success-color);">${rate}% <small style="font-size:0.9rem;">/ Năm</small></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span>Tiền lãi dự kiến:</span>
+                    <strong style="color:var(--primary-color)">+ ${formatCurrency(Math.round(interest))}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span>Tổng tiền nhận (gốc+lãi):</span>
+                    <strong style="color:var(--success-color)">${formatCurrency(Math.round(total))}</strong>
+                </div>
+            `;
+        } else {
+            display.innerHTML = '<div style="text-align:center; color:var(--text-secondary);">Nhập tối thiểu 1.000.000 VNĐ để xem lợi nhuận...</div>';
+        }
+    };
+
+    document.getElementById('savingsAmountInput')?.addEventListener('input', (e) => {
+        let val = e.target.value.replace(/\D/g, "");
+        if (val) e.target.value = new Intl.NumberFormat('vi-VN').format(val);
+        updateSavingsEstimate();
+    });
+
+    document.querySelectorAll('input[name="termMonths"]').forEach(input => {
+        input.addEventListener('change', updateSavingsEstimate);
+    });
+
+    document.getElementById('savingsForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const rawAmt = document.getElementById('savingsAmountInput').value.replace(/\D/g, "");
+        const amount = parseFloat(rawAmt);
+        const termMonths = parseInt(document.querySelector('input[name="termMonths"]:checked').value);
+        const rate = calculateSavingsRate(amount, termMonths);
+
+        if (amount < 1000000) return Toast.warn('Số tiền gửi tối thiểu là 1,000,000 VNĐ');
+
+        showLoader();
+        try {
+            const res = await fetch(`${Config.BASE_URL}/api/savings`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ amount, termMonths, rate })
+            });
+
+            if (res.ok) {
+                Toast.success('Yêu cầu gửi tiết kiệm đã được gửi! Vui lòng chờ Admin duyệt.');
+                document.getElementById('savingsForm').reset();
+                updateSavingsEstimate();
+                fetchAllData();
+            } else {
+                Toast.error('Lỗi khi gửi yêu cầu.');
+            }
+        } catch (err) {
+            Toast.error('Lỗi kết nối server.');
+        } finally {
+            hideLoader();
+        }
     });
 
     fetchAllData();

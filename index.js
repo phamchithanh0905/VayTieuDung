@@ -57,6 +57,18 @@ pool.connect(async (err) => {
                     "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             `);
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS Savings (
+                    id SERIAL PRIMARY KEY,
+                    "customerId" VARCHAR(50) NOT NULL,
+                    amount DECIMAL(18,2) NOT NULL,
+                    rate DECIMAL(5,2) NOT NULL,
+                    term_months INT NOT NULL,
+                    status VARCHAR(50) DEFAULT 'pending',
+                    "adminNote" TEXT,
+                    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
             // --- Tự động cập nhật Schema bảng Payments ---
             try {
                 await pool.query('ALTER TABLE Payments ADD COLUMN IF NOT EXISTS "customerId" VARCHAR(50)');
@@ -484,6 +496,56 @@ app.delete('/api/loans/cancel/:id', verifyToken, async (req, res) => {
         res.json({ message: 'Hủy khoản vay thành công' });
     } catch (err) {
         console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// --- API Savings ---
+app.get('/api/savings', verifyToken, async (req, res) => {
+    try {
+        const { customerId } = req.query;
+        let query = `
+            SELECT s.*, u.name as "customerName" 
+            FROM Savings s 
+            JOIN Users u ON s."customerId" = CAST(u.id AS VARCHAR)
+        `;
+        let params = [];
+        if (customerId) {
+            query += ' WHERE s."customerId" = $1';
+            params.push(customerId);
+        }
+        query += ' ORDER BY s."createdAt" DESC';
+        const result = await pool.query(query, params);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.post('/api/savings', verifyToken, async (req, res) => {
+    try {
+        const { amount, termMonths, rate } = req.body;
+        const customerId = req.user.id;
+        
+        await pool.query(
+            'INSERT INTO Savings ("customerId", amount, rate, term_months, status) VALUES ($1, $2, $3, $4, \'pending\')',
+            [customerId, amount, rate, termMonths]
+        );
+        res.status(201).json({ message: 'Yêu cầu gửi tiết kiệm đã được gửi.' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.put('/api/savings/:id', verifyToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'admin') return res.status(403).json({ message: 'Không có quyền.' });
+        const { id } = req.params;
+        const { status, adminNote } = req.body;
+        await pool.query('UPDATE Savings SET status = $1, "adminNote" = $2 WHERE id = $3', [status, adminNote, id]);
+        res.json({ message: 'Cập nhật thành công.' });
+    } catch (err) {
         res.status(500).json({ message: 'Server error' });
     }
 });

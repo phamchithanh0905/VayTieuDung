@@ -28,8 +28,9 @@
                 <li class="active" data-view="dashboard"><i class="fas fa-home"></i> Tổng Quan</li>
                 <li data-view="loans"><i class="fas fa-money-bill-wave"></i> Quản Lý Khoản Vay</li>
                 <li data-view="users"><i class="fas fa-users"></i> Khách Hàng</li>
-                <li data-view="notifications"><i class="fas fa-bell"></i> Gửi Thông Báo</li>
-                <li data-view="payments"><i class="fas fa-receipt"></i> Duyệt Thanh Toán</li>
+                <li data-view="notifs"><i class="fas fa-bullhorn"></i> Gửi Thông Báo</li>
+                <li data-view="savings-admin"><i class="fas fa-piggy-bank"></i> Duyệt Gửi Tiết Kiệm</li>
+                <li data-view="payments"><i class="fas fa-check-circle"></i> Duyệt Thanh Toán</li>
                 <li data-view="settings"><i class="fas fa-cogs"></i> Cài Đặt Gói Vay</li>
 
             </ul>
@@ -248,6 +249,33 @@
                     </div>
                 </div>
 
+                <!-- Savings Admin View -->
+                <div id="savings-adminView" class="view-section">
+                    <div class="glass-panel p-2">
+                        <div class="page-header">
+                            <h1><i class="fas fa-piggy-bank"></i> Duyệt Yêu Cầu Tích Lũy</h1>
+                        </div>
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Khách Hàng</th>
+                                        <th>Số Tiền</th>
+                                        <th>Lãi Suất</th>
+                                        <th>Kỳ Hạn</th>
+                                        <th>Trạng Thái</th>
+                                        <th>Hành Động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="savingsAdminTableBody">
+                                    <tr><td colspan="7" class="text-center">Đang tải...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </main>
     </div>
@@ -303,5 +331,29 @@
 
     <script src="js/data.js?v=3"></script>
     <script src="js/admin.js?v=3"></script>
+    <!-- Savings Action Modal -->
+    <div class="modal" id="savingsActionModal">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h2>Phê Duyệt Tích Lũy #<span id="savingsModalId"></span></h2>
+                <button class="close-btn" title="Đóng"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Khách hàng: <strong id="savingsModalCustomer"></strong></p>
+                <p>Số tiền gửi: <strong id="savingsModalAmount"></strong></p>
+                <p>Lãi suất: <strong id="savingsModalRate"></strong></p>
+
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label class="form-label">Ghi chú của Admin:</label>
+                    <textarea id="savingsModalNote" class="form-control" rows="3" placeholder="Ví dụ: Đã nhận tiền ký quỹ..."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button id="btnApproveSavings" class="btn btn-primary" style="flex: 1;"><i class="fas fa-check"></i> Chấp Thuận</button>
+                    <button id="btnRejectSavings" class="btn btn-danger" style="flex: 1;"><i class="fas fa-times"></i> Từ Chối</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

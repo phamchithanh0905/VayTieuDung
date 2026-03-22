@@ -48,6 +48,10 @@ pool.connect(async (err) => {
         console.log('Đã kết nối thành công tới Supabase PostgreSQL');
         // Auto-seed required rates 5, 6, 8, 10, 15, 17, 20
         try {
+            // --- ĐOẠN CODE KHÁM BỆNH DATABASE ---
+            const columns = await pool.query("SELECT column_name FROM information_schema.columns WHERE table_name = 'systemsettings'");
+            console.log('DANH SÁCH CỘT THỰC TẾ TRONG BẢNG SystemSettings:', columns.rows.map(c => c.column_name));
+
             const rates = [5, 6, 8, 10, 15, 17, 20];
             for (const r of rates) {
                 await pool.query(
@@ -59,6 +63,7 @@ pool.connect(async (err) => {
             await pool.query('INSERT INTO SystemSettings ("key", value_text) VALUES ($1, $2) ON CONFLICT ("key") DO NOTHING', ['bank_name', 'MBBank']);
             await pool.query('INSERT INTO SystemSettings ("key", value_text) VALUES ($1, $2) ON CONFLICT ("key") DO NOTHING', ['bank_account', '0888101901']);
             await pool.query('INSERT INTO SystemSettings ("key", value_text) VALUES ($1, $2) ON CONFLICT ("key") DO NOTHING', ['bank_holder', 'PHAM CHI THANH']);
+
 
 
             // Create Payments table if not exists

@@ -1,3 +1,4 @@
+/* global Config, Toast, checkAuth, Chart, DataService, showLoader, hideLoader */
 // customer.js - Integrated with backend
 
 document.addEventListener("DOMContentLoaded", () => {

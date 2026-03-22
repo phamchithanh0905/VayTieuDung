@@ -47,6 +47,16 @@ pool.connect(async (err) => {
     } else {
         console.log('Đã kết nối thành công tới Supabase PostgreSQL');
         try {
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS Payments (
+                    id SERIAL PRIMARY KEY,
+                    "loanId" VARCHAR(50) NOT NULL,
+                    "customerId" VARCHAR(50) NOT NULL,
+                    amount DECIMAL(18,2) NOT NULL,
+                    status VARCHAR(50) DEFAULT 'pending',
+                    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
             const rates = [5, 6, 8, 10, 15, 17, 20];
             for (const r of rates) {
                 await pool.query(
@@ -375,6 +385,64 @@ app.put('/api/loans/:id', verifyToken, async (req, res) => {
         const query = `UPDATE Loans SET ${setClauses.join(', ')} WHERE id = $${count} RETURNING *`;
         const result = await pool.query(query, params);
         res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// --- API Payments ---
+app.get('/api/payments', verifyToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
+    try {
+        const result = await pool.query(`
+            SELECT p.*, u.name as "customerName" 
+            FROM Payments p 
+            JOIN Users u ON p."customerId" = u.id 
+            ORDER BY p."createdAt" DESC
+        `);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.post('/api/payments', verifyToken, async (req, res) => {
+    try {
+        const { loanId, amount } = req.body;
+        const customerId = req.user.id; 
+        
+        await pool.query(
+            'INSERT INTO Payments ("loanId", "customerId", amount) VALUES ($1, $2, $3)',
+            [loanId, customerId, amount]
+        );
+        res.status(201).json({ message: 'Payment request created' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.put('/api/payments/:id', verifyToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
+    try {
+        const { status } = req.body; 
+        const paymentId = req.params.id;
+
+        const pRes = await pool.query('SELECT * FROM Payments WHERE id = $1', [paymentId]);
+        if (pRes.rows.length === 0) return res.status(404).json({ message: 'Giao dịch không tồn tại' });
+        const payment = pRes.rows[0];
+
+        if (status === 'confirmed') {
+            await pool.query(
+                'UPDATE Loans SET "amountPaid" = COALESCE("amountPaid", 0) + $1 WHERE id = $2',
+                [payment.amount, payment.loanId]
+            );
+        }
+
+        await pool.query('UPDATE Payments SET status = $1 WHERE id = $2', [status, paymentId]);
+        res.json({ message: 'Updated' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });

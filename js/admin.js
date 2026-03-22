@@ -1,3 +1,4 @@
+/* global Config, Toast, checkAuth, Chart, DataService, showLoader, hideLoader */
 // admin.js - Logic for Admin Dashboard integrated with backend
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -47,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
 
-            const [usersRes, loansRes, settingsRes, notifRes] = await Promise.all([
+            const [usersRes, loansRes, settingsRes, notifRes, paymentsRes] = await Promise.all([
                 fetch(`${Config.BASE_URL}/api/users`, { headers, signal: controller.signal }),
                 fetch(`${Config.BASE_URL}/api/loans`, { headers, signal: controller.signal }),
                 fetch(`${Config.BASE_URL}/api/settings`, { headers, signal: controller.signal }),
@@ -508,6 +509,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if(!currentActionLoanId) return;
         
         const nextDateVal = document.getElementById('modalNextDate').value;
+        let updateData = {};
 
         if (currentLoanStatus === 'pending') {
             updateData = { status: 'approved' };

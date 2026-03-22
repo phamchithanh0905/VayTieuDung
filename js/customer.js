@@ -43,8 +43,8 @@ document.addEventListener("DOMContentLoaded", () => {
             case 'approved': return '<span class="badge badge-active">Chờ nạp tiền</span>';
             case 'verifying': return '<span class="badge" style="background:#f39c12; color:white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">Đang xác minh</span>';
             case 'transferring': return '<span class="badge" style="background:#3498db; color:white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">Đang chuyển tiền</span>';
-            case 'active': return '<span class="badge badge-paid">Đang hoạt động</span>';
-            case 'paid': return '<span class="badge badge-paid">Đã tất toán</span>';
+            case 'active': return '<span class="badge badge-active">Đang hoạt động</span>';
+            case 'paid': return '<span class="badge badge-paid">Thành công</span>';
             case 'rejected': return '<span class="badge badge-rejected">Đã hủy</span>';
             default: return status;
         }
@@ -399,6 +399,33 @@ document.addEventListener("DOMContentLoaded", () => {
             };
         }
     };
+
+    const confirmReceived = async (id) => {
+        showLoader();
+        try {
+            const res = await fetch(`${Config.BASE_URL}/api/savings/${id}`, {
+                method: 'PUT',
+                headers,
+                body: JSON.stringify({ status: 'paid' })
+            });
+
+            if (res.ok) {
+                Toast.success('Cập nhật trạng thái thành công!');
+                // Chuyển hướng sang view Khoản tiết kiệm của tôi
+                const mysavingsLink = document.querySelector('.nav-links li[data-view="mysavings"]');
+                if (mysavingsLink) mysavingsLink.click();
+                
+                fetchAllData();
+            } else {
+                Toast.error('Lỗi khi xác nhận.');
+            }
+        } catch (err) {
+            Toast.error('Lỗi kết nối.');
+        } finally {
+            hideLoader();
+        }
+    };
+
     const renderDashboardStats = () => {
         let totalDebt = 0;
         let totalPaid = 0;

@@ -33,7 +33,7 @@
                 <li data-view="apply"><i class="fas fa-plus-circle"></i> Đăng ký vay</li>
                 <li data-view="myloans"><i class="fas fa-history"></i> Khoản vay của tôi</li>
                 <li data-view="savings"><i class="fas fa-piggy-bank"></i> <span>Gửi Tiết Kiệm</span></li>
-                <li data-view="savings"><i class="fas fa-history"></i> <span>Khoản Tiết Kiệm Của Tôi</span></li>
+                <li data-view="mysavings"><i class="fas fa-history"></i> <span>Khoản Tiết Kiệm Của Tôi</span></li>
                 <li data-view="notifications"><i class="fas fa-bell"></i> Thông báo hệ thống</li>
                 <li data-view="profile"><i class="fas fa-user-circle"></i> Thông tin cá nhân</li>
             </ul>
@@ -57,83 +57,122 @@
 
             <div class="container">
                 <!-- Savings View -->
-            <section id="savingsView" class="view-section">
-                <div class="glass-panel p-2 mb-2">
-                    <h2 class="view-title"><i class="fas fa-piggy-bank"></i> Gửi Tiết Kiệm Tích Lũy</h2>
-                    <p style="color:var(--text-secondary)">Lãi suất cực cao, an toàn tuyệt đối. Hãy để tiền của bạn sinh lời mỗi ngày.</p>
-                </div>
-
-                <div class="row">
-                    <!-- Calculator -->
-                    <div class="col-md-5">
-                        <div class="glass-panel p-2">
-                            <h3 style="color:var(--primary-color); margin-bottom:1.5rem;"><i class="fas fa-calculator"></i> Tính Toán Lợi Nhuận</h3>
-                            <form id="savingsForm">
-                                <div class="form-group">
-                                    <label class="form-label">Số Tiền Muốn Gửi (VNĐ)</label>
-                                    <input type="text" class="form-control" id="savingsAmountInput" placeholder="Ví dụ: 10,000,000" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Kỳ Hạn Gửi</label>
-                                    <div style="display: flex; gap: 1rem;">
-                                        <label class="radio-card" style="flex: 1;">
-                                            <input type="radio" name="termMonths" value="6" checked>
-                                            <div class="radio-content">
-                                                <span>6 Tháng</span>
-                                            </div>
-                                        </label>
-                                        <label class="radio-card" style="flex: 1;">
-                                            <input type="radio" name="termMonths" value="12">
-                                            <div class="radio-content">
-                                                <span>12 Tháng (1 Năm)</span>
-                                            </div>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div id="savingsEstimateDisplay" class="glass-panel" style="margin-top: 2rem; padding: 1.5rem; background: rgba(var(--success-rgb), 0.05); border: 1px dashed var(--success-color);">
-                                    <!-- Dynamic estimate -->
-                                </div>
-
-                                <button type="submit" class="btn btn-primary w-100" style="margin-top: 1.5rem;">Gửi Yêu Cầu Tích Lũy</button>
-                            </form>
-                        </div>
+                <!-- Gửi Tiết Kiệm (Calculator) -->
+                <div id="savingsView" class="view-section">
+                    <div class="glass-panel p-2 mb-2">
+                        <h2 class="view-title"><i class="fas fa-piggy-bank"></i> Gửi Tiết Kiệm Tích Lũy</h2>
+                        <p style="color:var(--text-secondary)">Lãi suất cực cao, an toàn tuyệt đối. Hãy để tiền của bạn sinh lời mỗi ngày.</p>
                     </div>
 
-                    <!-- History -->
-                    <div class="col-md-7">
-                        <div class="glass-panel p-2">
-                            <h3 style="margin-bottom:1.5rem;"><i class="fas fa-history"></i> Lịch Sử Gửi Tiết Kiệm</h3>
-                            <div id="savingsListGrid" class="savings-grid">
-                                <!-- Savings Cards will be injected here -->
-                                <div class="text-center p-5" style="width: 100%; color: var(--text-secondary);">
-                                    <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
-                                    <p>Đang tải dữ liệu tích lũy...</p>
-                                </div>
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="glass-panel p-2">
+                                <h3 style="color:var(--primary-color); margin-bottom:1.5rem;"><i class="fas fa-calculator"></i> Tính Toán Lợi Nhuận</h3>
+                                <form id="savingsForm">
+                                    <div class="form-group">
+                                        <label class="form-label">Số Tiền Muốn Gửi (VNĐ)</label>
+                                        <input type="text" class="form-control" id="savingsAmountInput" placeholder="Ví dụ: 10,000,000" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Kỳ Hạn Gửi</label>
+                                        <div style="display: flex; gap: 1rem;">
+                                            <label class="radio-card" style="flex: 1;">
+                                                <input type="radio" name="termMonths" value="6" checked>
+                                                <div class="radio-content">
+                                                    <span>6 Tháng</span>
+                                                </div>
+                                            </label>
+                                            <label class="radio-card" style="flex: 1;">
+                                                <input type="radio" name="termMonths" value="12">
+                                                <div class="radio-content">
+                                                    <span>12 Tháng (1 Năm)</span>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div id="savingsEstimateDisplay" class="glass-panel" style="margin-top: 2rem; padding: 1.5rem; background: rgba(var(--success-rgb), 0.05); border: 1px dashed var(--success-color);">
+                                        <!-- Dynamic estimate -->
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary w-100" style="margin-top: 1.5rem; padding: 1rem; font-weight: 700;">Gửi Yêu Cầu Tích Lũy</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="col-md-7">
+                            <div class="glass-panel p-2" style="background: rgba(46, 204, 113, 0.05); border: 1px solid rgba(46, 204, 113, 0.2);">
+                                <h4><i class="fas fa-shield-alt"></i> Tại sao nên chọn chúng tôi?</h4>
+                                <ul style="list-style: none; padding: 0; margin-top: 1.5rem;">
+                                    <li style="margin-bottom: 1.5rem; display: flex; gap: 15px;">
+                                        <div class="circle-icon-sm" style="background: var(--success-color); flex-shrink: 0;"><i class="fas fa-percentage"></i></div>
+                                        <div>
+                                            <strong>Lãi suất vượt trội</strong>
+                                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 5px;">Hưởng mức lãi suất cạnh tranh nhất, tối ưu lợi nhuận cho dòng vốn của bạn.</p>
+                                        </div>
+                                    </li>
+                                    <li style="margin-bottom: 1.5rem; display: flex; gap: 15px;">
+                                        <div class="circle-icon-sm" style="background: var(--primary-color); flex-shrink: 0;"><i class="fas fa-clock"></i></div>
+                                        <div>
+                                            <strong>Thủ tục cực nhanh</strong>
+                                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 5px;">Đăng ký và duyệt chỉ trong vài phút, tiền sinh lời ngay lập tức.</p>
+                                        </div>
+                                    </li>
+                                    <li style="margin-bottom: 1.5rem; display: flex; gap: 15px;">
+                                        <div class="circle-icon-sm" style="background: #e67e22; flex-shrink: 0;"><i class="fas fa-lock"></i></div>
+                                        <div>
+                                            <strong>An toàn tuyệt đối</strong>
+                                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 5px;">Mọi khoản gửi đều được bảo mật và giám sát chặt chẽ.</p>
+                                        </div>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <style>
-                    .radio-card input { display: none; }
-                    .radio-card .radio-content {
-                        padding: 1rem;
-                        background: var(--surface-color);
-                        border: 1px solid var(--border-color);
-                        border-radius: 8px;
-                        text-align: center;
-                        cursor: pointer;
-                        transition: all 0.3s;
-                    }
-                    .radio-card input:checked + .radio-content {
-                        border-color: var(--primary-color);
-                        background: rgba(var(--primary-rgb), 0.1);
-                        color: var(--primary-color);
-                        font-weight: 700;
-                    }
-                </style>
-            </section>
+                <!-- Khoản Tiết Kiệm Của Tôi (Grid) -->
+                <div id="mysavingsView" class="view-section">
+                    <div class="glass-panel p-2">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                            <h2 class="view-title" style="margin: 0;"><i class="fas fa-history"></i> Khoản Tiết Kiệm Của Tôi</h2>
+                            <button class="btn btn-primary btn-sm" onclick="document.querySelector('[data-view=savings]').click()" style="padding: 10px 25px; border-radius: 12px; font-weight: 600;">
+                                <i class="fas fa-plus"></i> Gửi Thêm
+                            </button>
+                        </div>
+                        
+                        <div id="savingsListGrid" class="savings-grid">
+                            <!-- Cards will be injected by JS -->
+                            <div class="text-center p-5" style="width: 100%; color: var(--text-secondary);">
+                                <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                                <p>Đang tải danh sách tích lũy...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <style>
+                        .radio-card input { display: none; }
+                        .radio-card .radio-content {
+                            padding: 1rem;
+                            background: var(--surface-color);
+                            border: 1px solid var(--border-color);
+                            border-radius: 8px;
+                            text-align: center;
+                            cursor: pointer;
+                            transition: all 0.3s;
+                        }
+                        .radio-card input:checked + .radio-content {
+                            border-color: var(--primary-color);
+                            background: rgba(var(--primary-rgb), 0.1);
+                            color: var(--primary-color);
+                            font-weight: 700;
+                        }
+                        .savings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+                        .savings-card { transition: all 0.3s ease; border-radius: 20px; position: relative; overflow: hidden; }
+                        .savings-card:hover { transform: translateY(-8px); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+                        .circle-icon-sm { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; }
+                    </style>
+                </div>
 
             <!-- Notifications View -->
                 <div class="view-section" id="notificationsView">

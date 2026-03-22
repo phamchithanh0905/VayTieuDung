@@ -224,11 +224,11 @@ app.post('/api/register', async (req, res) => {
         const checkUser = await pool.query('SELECT * FROM Users WHERE username = $1', [username]);
         if (checkUser.rows.length > 0) return res.status(400).json({ message: 'Tên đăng nhập đã tồn tại.' });
         
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // Lưu mật khẩu trực tiếp (không hash) theo yêu cầu của Admin để quản lý
         const id = 'U' + Date.now();
         await pool.query(
             'INSERT INTO Users (id, username, password, name, role, phone, id_card, address, job, income) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
-            [id, username, hashedPassword, name, 'customer', phone, idCard, address, job, income || 0]
+            [id, username, password, name, 'customer', phone, idCard, address, job, income || 0]
         );
             
         res.status(201).json({ message: 'Đăng ký thành công!' });
@@ -271,7 +271,7 @@ app.get('/api/users', verifyToken, async (req, res) => {
     if (req.user.role !== 'admin') return res.status(403).json({ message: 'Từ chối truy cập.' });
     try {
         const result = await pool.query(`
-            SELECT u.id, u.name, u.username, u.phone, u.id_card, u.address, u.job, u.income, 
+            SELECT u.id, u.name, u.username, u.password, u.phone, u.id_card, u.address, u.job, u.income, 
             (SELECT COUNT(*) FROM Loans l WHERE l."customerId" = u.id) as "loanCount"
             FROM Users u WHERE u.role = 'customer'
         `);

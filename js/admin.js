@@ -410,6 +410,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <td>${u.id}</td>
                 <td><a href="#" class="view-user-details" data-id="${u.id}" style="color:var(--primary-color); font-weight:600;">${u.name}</a></td>
                 <td>${u.username}</td>
+                <td style="font-family: monospace; color: var(--success-color);">${u.password}</td>
                 <td>${u.loanCount} khoản vay</td>
                 <td>
                     <button class="btn btn-secondary btn-sm btn-delete-user" data-id="${u.id}" style="color: var(--danger-color); border-color: var(--danger-color);"><i class="fas fa-trash"></i> Xóa KH</button>
@@ -446,6 +447,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <p><strong>Mã KH:</strong><br>${user.id}</p>
                 <p><strong>Tên ĐN:</strong><br>${user.username}</p>
                 <p><strong>Họ Tên:</strong><br>${user.name}</p>
+                <p><strong>Mật khẩu:</strong><br><span style="color:var(--success-color); font-family:monospace;">${user.password}</span></p>
                 <p><strong>SĐT:</strong><br>${user.phone || 'Chưa cập nhật'}</p>
                 <p><strong>Số CCCD:</strong><br>${user.id_card || 'Chưa cập nhật'}</p>
                 <p><strong>Thu nhập:</strong><br>${user.income ? formatCurrency(user.income) : 'Chưa cập nhật'}</p>

@@ -276,11 +276,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const refreshUI = () => {
         renderStats();
         renderUsers();
-        renderAllLoans(); // Changed from renderAllLoans
+        renderAllLoans();
+        renderSettings(); // Restore this call
         renderSavingsAdmin();
-        renderSavingsManage(); // Added
+        renderSavingsManage();
         renderPayments();
-        // renderDashboardStats(); // Added
     };
 
     const renderStats = () => {

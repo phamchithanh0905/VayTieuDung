@@ -541,14 +541,14 @@ app.post('/api/savings', verifyToken, async (req, res) => {
 app.put('/api/savings/:id', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, adminNote } = req.body;
+        const { status, adminNote, createdAt } = req.body;
 
         const check = await pool.query('SELECT * FROM Savings WHERE id = $1', [id]);
         if (check.rows.length === 0) return res.status(404).json({ message: 'Không tìm thấy.' });
 
         // Nếu là admin: được sửa mọi thứ
         if (req.user.role === 'admin') {
-            await pool.query('UPDATE Savings SET status = $1, "adminNote" = $2 WHERE id = $3', [status, adminNote, id]);
+            await pool.query('UPDATE Savings SET status = $1, "adminNote" = $2, "createdAt" = COALESCE($3, "createdAt") WHERE id = $4', [status, adminNote, createdAt, id]);
             return res.json({ message: 'Cập nhật thành công.' });
         }
 

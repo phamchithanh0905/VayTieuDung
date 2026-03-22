@@ -275,11 +275,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const refreshUI = () => {
         renderStats();
-        renderAllLoans();
         renderUsers();
-        renderSettings();
-        renderPayments();
+        renderAllLoans(); // Changed from renderAllLoans
         renderSavingsAdmin();
+        renderSavingsManage(); // Added
+        renderPayments();
+        // renderDashboardStats(); // Added
     };
 
     const renderStats = () => {
@@ -675,23 +676,58 @@ document.addEventListener("DOMContentLoaded", () => {
         `).join('');
     };
 
+    const renderSavingsManage = () => {
+        const tb = document.getElementById('savingsManageTableBody');
+        if (!tb) return;
+
+        if (savings.length === 0) {
+            tb.innerHTML = '<tr><td colspan="8" class="text-center">Chưa có dữ liệu tích lũy.</td></tr>';
+            return;
+        }
+
+        tb.innerHTML = savings.map(s => `
+            <tr>
+                <td style="padding: 1.2rem 0.5rem;">#${s.id}</td>
+                <td style="padding: 1.2rem 0.5rem;">${new Date(s.createdAt).toLocaleDateString('vi-VN')}</td>
+                <td style="padding: 1.2rem 0.5rem;"><strong>${s.customerName || 'N/A'}</strong></td>
+                <td style="padding: 1.2rem 0.5rem;">${formatCurrency(s.amount)}</td>
+                <td style="padding: 1.2rem 0.5rem;"><span style="color:var(--success-color); font-weight:700;">${s.rate}%</span></td>
+                <td style="padding: 1.2rem 0.5rem;">${s.term_months} Tháng</td>
+                <td style="padding: 1.2rem 0.5rem;">${getStatusBadge(s.status)}</td>
+                <td style="padding: 1.2rem 0.5rem;">
+                    <button class="btn btn-secondary btn-sm btn-action-savings" data-id="${s.id}" style="padding: 6px 12px; font-size: 0.75rem;">
+                        <i class="fas fa-cog"></i> Sửa
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    };
+
     let currentActionSavingsId = null;
     const savingsModal = document.getElementById('savingsActionModal');
 
-    document.getElementById('savingsAdminTableBody')?.addEventListener('click', (e) => {
+    // Event delegation for BOTH tables
+    document.addEventListener('click', (e) => {
         const btn = e.target.closest('.btn-action-savings');
         if (btn) openSavingsModal(btn.dataset.id);
     });
 
     const openSavingsModal = (id) => {
-        currentActionSavingsId = id;
         const item = savings.find(s => s.id == id);
-        
-        document.getElementById('savingsModalId').textContent = item.id;
+        if (!item) return;
+
+        currentActionSavingsId = id;
+        document.getElementById('savingsModalId').textContent = '#' + item.id;
         document.getElementById('savingsModalCustomer').textContent = item.customerName;
         document.getElementById('savingsModalAmount').textContent = formatCurrency(item.amount);
         document.getElementById('savingsModalRate').textContent = item.rate + '% / Năm';
         document.getElementById('savingsModalNote').value = item.adminNote || '';
+        
+        // Populate date field (YYYY-MM-DD)
+        const dateInput = document.getElementById('savingsModalDate');
+        if (dateInput) {
+            dateInput.value = new Date(item.createdAt).toISOString().split('T')[0];
+        }
 
         // Dynamic buttons based on status
         const btnApprove = document.getElementById('btnApproveSavings');
@@ -725,18 +761,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const updateSavingsStatus = async (status) => {
         if (!currentActionSavingsId) return;
-        const adminNote = document.getElementById('savingsModalNote').value;
-
+        const note = document.getElementById('savingsModalNote').value;
+        const createdAt = document.getElementById('savingsModalDate')?.value;
+        
         showLoader();
         try {
             const res = await fetch(`${Config.BASE_URL}/api/savings/${currentActionSavingsId}`, {
                 method: 'PUT',
                 headers,
-                body: JSON.stringify({ status, adminNote })
+                body: JSON.stringify({ status, adminNote: note, createdAt })
             });
 
             if (res.ok) {
-                Toast.success('Đã cập nhật yêu cầu tích lũy.');
+                Toast.success('Cập nhật trạng thái tích lũy thành công!');
                 closeSavingsModal();
                 fetchAllData();
             } else {

@@ -312,17 +312,40 @@
                 <p style="font-size: 1.1rem; margin-top: 1rem;">Số dư còn lại: <strong id="payRemaining"
                         style="color: var(--danger-color);"></strong></p>
 
+                <div style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; margin-top: 1.5rem; border: 1px solid var(--border-color);">
+                    <h3 style="margin-bottom: 1rem; color: var(--primary-color); font-size: 1rem; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-university"></i> THÔNG TIN CHUYỂN KHOẢN
+                    </h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: center;">
+                        <div style="font-size: 0.9rem; line-height: 1.6;">
+                            <p>Ngân hàng: <strong>MBBank (Quân Đội)</strong></p>
+                            <p>STK: <strong style="color: var(--primary-color); font-size: 1.1rem;">0888101901</strong></p>
+                            <p>Chủ TK: <strong>PHAM CHI THANH</strong></p>
+                            <p style="margin-top: 0.5rem; font-style: italic; color: var(--text-secondary); font-size: 0.8rem;">
+                                * Nội dung: <span style="color: var(--warning-color)">Thanh toan <span class="pay-loan-id-text"></span></span>
+                            </p>
+                        </div>
+                        <div style="text-align: right;">
+                            <img id="paymentQR" src="https://img.vietqr.io/image/MB-0888101901-compact.jpg?amount=0&addInfo=Thanh%20toan%20khoan%20vay&accountName=PHAM%20CHI%20THANH" 
+                                 alt="QR Thanh Toán" style="width: 130px; border-radius: 8px; border: 4px solid #fff;">
+                        </div>
+                    </div>
+                </div>
+
                 <hr style="border: none; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
 
                 <form id="paymentForm">
                     <div class="form-group">
-                        <label class="form-label">Số Tiền Thanh Toán Ký Này (VNĐ)</label>
-                        <input type="number" class="form-control" id="paymentAmountInput" min="10000" required>
+                        <label class="form-label">Số Tiền Đã Chuyển Khoản (VNĐ)</label>
+                        <input type="number" class="form-control" id="paymentAmountInput" min="10000" placeholder="Nhập số tiền bạn đã chuyển..." required>
                     </div>
                     <button type="submit" class="btn btn-primary"
-                        style="width: 100%; background: var(--success-color); color: #121212;">
-                        <i class="fas fa-credit-card"></i> Xác Nhận Thanh Toán
+                        style="width: 100%; background: var(--success-color); color: #121212; padding: 1rem; font-weight: 700;">
+                        <i class="fas fa-check-circle"></i> XÁC NHẬN ĐÃ THANH TOÁN
                     </button>
+                    <p style="text-align: center; font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.8rem;">
+                        <i class="fas fa-shield-alt"></i> Sau khi bấm xác nhận, Admin sẽ kiểm soát và duyệt lệnh của bạn.
+                    </p>
                 </form>
             </div>
         </div>

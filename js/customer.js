@@ -386,13 +386,21 @@ document.addEventListener("DOMContentLoaded", () => {
         currentLoanMaxPay = summary.totalPayable - (loan.amountPaid || 0);
 
         document.getElementById('payLoanId').textContent = loan.id;
+        document.querySelectorAll('.pay-loan-id-text').forEach(el => el.textContent = loan.id);
         document.getElementById('payTotalAmount').textContent = formatCurrency(summary.totalPayable);
         document.getElementById('payAmountPaid').textContent = formatCurrency(loan.amountPaid || 0);
         document.getElementById('payRemaining').textContent = formatCurrency(currentLoanMaxPay);
         
+        const payAmount = Math.round(Math.min(summary.monthlyInstallment, currentLoanMaxPay));
         const payInput = document.getElementById('paymentAmountInput');
         payInput.max = currentLoanMaxPay;
-        payInput.value = Math.min(summary.monthlyInstallment, currentLoanMaxPay).toFixed(0);
+        payInput.value = payAmount;
+
+        // Cập nhật QR động theo số tiền
+        const qrImg = document.getElementById('paymentQR');
+        if (qrImg) {
+            qrImg.src = `https://img.vietqr.io/image/MB-0888101901-compact.jpg?amount=${payAmount}&addInfo=Thanh%20toan%20${loan.id}&accountName=PHAM%20CHI%20THANH`;
+        }
         
         paymentModal.classList.add('active');
     };
@@ -589,6 +597,17 @@ document.addEventListener("DOMContentLoaded", () => {
             hideLoader();
         }
     });
+
+    const paymentAmountInput = document.getElementById('paymentAmountInput');
+    if (paymentAmountInput) {
+        paymentAmountInput.addEventListener('input', (e) => {
+            const amount = e.target.value;
+            const qrImg = document.getElementById('paymentQR');
+            if (qrImg && currentPayLoanId) {
+                qrImg.src = `https://img.vietqr.io/image/MB-0888101901-compact.jpg?amount=${amount}&addInfo=Thanh%20toan%20${currentPayLoanId}&accountName=PHAM%20CHI%20THANH`;
+            }
+        });
+    }
 
     // Navigation Sidebar
     const navLinks = document.querySelectorAll('.nav-links li');

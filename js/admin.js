@@ -30,20 +30,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const getStatusBadge = (status) => {
         const badges = {
-            'active': '<span class="badge badge-active">Đang vay</span>',
             'pending': '<span class="badge badge-pending">Chờ duyệt</span>',
-            'approved': '<span class="badge badge-pending" style="background:#5a189a">Đã duyệt (Chờ tiền)</span>',
-            'rejected': '<span class="badge badge-rejected">Từ chối</span>',
-            'paid': '<span class="badge badge-paid">Đã tất toán</span>',
-            // Savings statuses (added based on user instruction)
-            'pending_savings': '<span class="badge badge-pending">Đang xử lý</span>',
-            'approved_savings': '<span class="badge badge-active">Chờ nạp tiền</span>',
-            'verifying_savings': '<span class="badge badge-pending" style="background:#f39c12; color:white;">Đang xác minh tiền</span>',
-            'active_savings': '<span class="badge badge-paid">Đang hoạt động</span>',
-            'paid_savings': '<span class="badge badge-paid">Đã tất toán</span>',
-            'rejected_savings': '<span class="badge badge-rejected">Đã hủy</span>'
+            'approved': '<span class="badge badge-pending" style="background:#5a189a; color:white;">Chờ nạp tiền</span>',
+            'verifying': '<span class="badge" style="background:#f39c12; color:white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">Đang xác minh tiền</span>',
+            'active': '<span class="badge badge-paid">Đang hoạt động</span>',
+            'rejected': '<span class="badge badge-rejected">Đã hủy</span>',
+            'paid': '<span class="badge badge-paid">Đã tất toán</span>'
         };
-        return badges[status] || status;
+        return badges[status] || `<span class="badge">${status}</span>`;
     };
 
 
@@ -664,16 +658,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         tb.innerHTML = savings.map(s => `
             <tr>
-                <td>#${s.id}</td>
-                <td><strong>${s.customerName || 'N/A'}</strong></td>
-                <td>${formatCurrency(s.amount)}</td>
-                <td><span class="badge badge-active">${s.rate}%</span></td>
-                <td>${s.term_months} Tháng</td>
-                <td>${getStatusBadge(s.status)}</td>
-                <td>
-                    ${s.status === 'pending' ? `
-                        <button class="btn btn-primary btn-sm btn-action-savings" data-id="${s.id}">
-                            <i class="fas fa-edit"></i> Duyệt
+                <td style="padding: 1.2rem 0.5rem;">#${s.id}</td>
+                <td style="padding: 1.2rem 0.5rem;"><strong>${s.customerName || 'N/A'}</strong></td>
+                <td style="padding: 1.2rem 0.5rem;">${formatCurrency(s.amount)}</td>
+                <td style="padding: 1.2rem 0.5rem;"><span style="color:var(--success-color); font-weight:700;">${s.rate}%</span></td>
+                <td style="padding: 1.2rem 0.5rem;">${s.term_months} Tháng</td>
+                <td style="padding: 1.2rem 0.5rem;">${getStatusBadge(s.status)}</td>
+                <td style="padding: 1.2rem 0.5rem;">
+                    ${(s.status === 'pending' || s.status === 'verifying' || s.status === 'approved') ? `
+                        <button class="btn btn-primary btn-sm btn-action-savings" data-id="${s.id}" style="padding: 6px 12px; font-size: 0.75rem;">
+                            <i class="fas fa-edit"></i> Xử lý
                         </button>
                     ` : '<span class="text-secondary">-</span>'}
                 </td>

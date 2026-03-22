@@ -63,8 +63,8 @@ app.get('/api/notifications', async (req, res) => {
         const result = await pool.query('SELECT * FROM Notifications WHERE is_active = TRUE ORDER BY created_at DESC LIMIT 10');
         res.json(result.rows);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
+        console.error("Notifications table missing or error:", err.message);
+        res.json([]);
     }
 });
 

@@ -75,7 +75,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="income">Thu nhập hàng tháng</label>
-                    <input type="number" class="form-control" name="income" id="income" placeholder="VD: 15000000" required>
+                    <input type="text" class="form-control" name="income" id="income" placeholder="VD: 15,000,000" inputmode="numeric" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="regUsername">Tên đăng nhập mới</label>
@@ -210,7 +210,7 @@
                 const idCard = registerForm.idCard.value;
                 const address = registerForm.address.value;
                 const job = registerForm.job.value;
-                const income = registerForm.income.value;
+                const income = registerForm.income.value.replace(/\D/g, '');
 
                 showLoader();
                 try {
@@ -252,6 +252,14 @@
                     Toast.error('Lỗi kết nối server');
                 } finally {
                     hideLoader();
+                }
+            });
+
+            // Formatter cho ô thu nhập đăng ký
+            document.getElementById('income')?.addEventListener('input', (e) => {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value) {
+                    e.target.value = new Intl.NumberFormat('vi-VN').format(value);
                 }
             });
         });

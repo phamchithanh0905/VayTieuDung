@@ -103,8 +103,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const isProfileComplete = () => {
         if (!userProfile) return false;
-        // Kiểm tra đơn giản: Chỉ cần có dữ liệu trong tất cả các ô là ok
-        return !!(userProfile.phone && userProfile.id_card && userProfile.address && userProfile.job && userProfile.income);
+        // Kiểm tra: phải có đầy đủ thông tin cá nhân + thông tin ngân hàng
+        return !!(userProfile.phone && userProfile.id_card && userProfile.address && userProfile.job && userProfile.income
+            && userProfile.bank_name && userProfile.bank_account && userProfile.bank_holder);
     };
 
     const renderProfile = () => {
@@ -125,6 +126,14 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById('s_address').textContent = userProfile.address;
             document.getElementById('s_job').textContent = userProfile.job;
             document.getElementById('s_income').textContent = formatCurrency(userProfile.income);
+
+            // Bank info summary
+            const sBankName = document.getElementById('s_bankName');
+            const sBankAccount = document.getElementById('s_bankAccount');
+            const sBankHolder = document.getElementById('s_bankHolder');
+            if (sBankName) sBankName.textContent = userProfile.bank_name || '-';
+            if (sBankAccount) sBankAccount.textContent = userProfile.bank_account || '-';
+            if (sBankHolder) sBankHolder.textContent = userProfile.bank_holder || '-';
         } else {
             summaryView.style.display = 'none';
             editView.style.display = 'block';
@@ -140,6 +149,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (incomeInput && userProfile.income) {
                     incomeInput.value = new Intl.NumberFormat('vi-VN').format(userProfile.income);
                 }
+
+                // Fill bank fields
+                const bankNameInput = document.getElementById('profileBankName');
+                const bankAccountInput = document.getElementById('profileBankAccount');
+                const bankHolderInput = document.getElementById('profileBankHolder');
+                if (bankNameInput) bankNameInput.value = userProfile.bank_name || '';
+                if (bankAccountInput) bankAccountInput.value = userProfile.bank_account || '';
+                if (bankHolderInput) bankHolderInput.value = userProfile.bank_holder || '';
             }
         }
     };
@@ -174,8 +191,15 @@ document.addEventListener("DOMContentLoaded", () => {
             idCard: form.idCard.value,
             address: form.address.value,
             job: form.job.value,
-            income: parseFloat(rawIncome) || 0
+            income: parseFloat(rawIncome) || 0,
+            bankName: form.bankName.value.trim(),
+            bankAccount: form.bankAccount.value.trim(),
+            bankHolder: form.bankHolder.value.trim().toUpperCase()
         };
+
+        if (!profileData.bankName || !profileData.bankAccount || !profileData.bankHolder) {
+            return Toast.warn('Vui lòng nhập đầy đủ thông tin tài khoản ngân hàng!');
+        }
 
         showLoader();
         try {
@@ -849,10 +873,9 @@ document.addEventListener("DOMContentLoaded", () => {
         link.addEventListener('click', () => {
             const targetView = link.dataset.view;
 
-            // Ràng buộc: Phải đầy đủ thông tin mới được vào mục Đăng ký vay
-            if (targetView === 'apply' && !isProfileComplete()) {
-                Toast.warn('Vui lòng khai báo đầy đủ thông tin cá nhân trước khi sử dụng tính năng vay!');
-                // Tự động nhảy sang trang Profile
+            // Ràng buộc: Phải đầy đủ thông tin mới được vào mục Đăng ký vay hoặc Gửi tiết kiệm
+            if ((targetView === 'apply' || targetView === 'savings') && !isProfileComplete()) {
+                Toast.warn('Vui lòng khai báo đầy đủ thông tin cá nhân và tài khoản ngân hàng trước khi sử dụng tính năng này!');
                 const profileLink = Array.from(navLinks).find(l => l.dataset.view === 'profile');
                 if (profileLink) profileLink.click();
                 return;

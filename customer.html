@@ -226,6 +226,27 @@
                             </div>
                         </div>
 
+                        <!-- Bank Info Summary -->
+                        <div style="margin-top: 1.5rem; background: rgba(67,97,238,0.06); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.25rem;">
+                            <h4 style="margin: 0 0 1rem; color: var(--primary-color); font-size: 0.9rem; display:flex; align-items:center; gap:8px;">
+                                <i class="fas fa-university"></i> Tài Khoản Ngân Hàng Nhận Tiền
+                            </h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <small class="small-label">Ngân Hàng</small>
+                                    <div id="s_bankName" style="font-weight:600; color: var(--text-primary);">-</div>
+                                </div>
+                                <div>
+                                    <small class="small-label">Số Tài Khoản</small>
+                                    <div id="s_bankAccount" style="font-weight:700; font-size:1.1rem; color: var(--primary-color);">-</div>
+                                </div>
+                                <div style="grid-column: span 2;">
+                                    <small class="small-label">Chủ Tài Khoản</small>
+                                    <div id="s_bankHolder" style="font-weight:600; color: var(--text-primary);">-</div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div style="margin-top:2.5rem; display:flex; gap:1.2rem;">
                             <button class="btn btn-secondary" id="btnEditProfile" style="flex:1; padding: 1rem;">
                                 <i class="fas fa-edit"></i> Chỉnh Sửa Hồ Sơ
@@ -245,12 +266,12 @@
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                                 <div class="form-group">
                                     <label class="form-label" for="profilePhone">Số điện thoại</label>
-                                    <input type="text" class="form-control" name="phone" id="profilePhone" placeholder="Vd: 0942xxx..." 
+                                    <input type="text" class="form-control" name="phone" id="profilePhone" placeholder="Vd: 0942xxx..."
                                         pattern="0[0-9]{9}" title="Vui lòng nhập đúng 10 chữ số bắt đầu bằng số 0" required>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label" for="profileIdCard">Số CCCD (12 số)</label>
-                                    <input type="text" class="form-control" name="idCard" id="profileIdCard" placeholder="Vd: 079..." 
+                                    <input type="text" class="form-control" name="idCard" id="profileIdCard" placeholder="Vd: 079..."
                                         pattern="[0-9]{12}" title="Vui lòng nhập đúng 12 chữ số CCCD" required>
                                 </div>
                                 <div class="form-group span-2">
@@ -266,6 +287,37 @@
                                     <input type="text" class="form-control" name="income" id="incomeInput" placeholder="Vd: 15,000,000" required>
                                 </div>
                             </div>
+
+                            <!-- Bank Account Section -->
+                            <div style="margin: 1.5rem 0 1rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                                <h4 style="color: var(--primary-color); margin-bottom: 0.5rem; display:flex; align-items:center; gap:8px;">
+                                    <i class="fas fa-university"></i> Tài Khoản Ngân Hàng Nhận Tiền
+                                </h4>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.25rem;">
+                                    <i class="fas fa-info-circle"></i> Dùng để nhận tiền giải ngân khoản vay và trả lãi tiết kiệm từ hệ thống.
+                                </p>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                                    <div class="form-group">
+                                        <label class="form-label" for="profileBankName">Tên Ngân Hàng</label>
+                                        <input type="text" class="form-control" name="bankName" id="profileBankName"
+                                            placeholder="Vd: MBBank, VCB, Techcombank..." required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="profileBankAccount">Số Tài Khoản</label>
+                                        <input type="text" class="form-control" name="bankAccount" id="profileBankAccount"
+                                            placeholder="Nhập số tài khoản" required>
+                                    </div>
+                                    <div class="form-group span-2">
+                                        <label class="form-label" for="profileBankHolder">Tên Chủ Tài Khoản (in hoa)</label>
+                                        <input type="text" class="form-control" name="bankHolder" id="profileBankHolder"
+                                            placeholder="Vd: NGUYEN VAN A" style="text-transform: uppercase;" required>
+                                        <small style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.3rem; display: block;">
+                                            <i class="fas fa-exclamation-triangle" style="color: var(--warning-color);"></i> Phải trùng khớp chính xác với tên trong sổ tài khoản.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
                             <button type="submit" class="btn btn-primary w-100 mt-2 p-2 fw-600">
                                 <i class="fas fa-save"></i> Lưu & Hoàn Tất Hồ Sơ
                             </button>

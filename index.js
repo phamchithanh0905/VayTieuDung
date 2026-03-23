@@ -91,6 +91,13 @@ pool.connect(async (err) => {
             await pool.query('INSERT INTO SystemSettings ("key", value_text) VALUES ($1, $2) ON CONFLICT ("key") DO NOTHING', ['bank_name', 'MBBank']);
             await pool.query('INSERT INTO SystemSettings ("key", value_text) VALUES ($1, $2) ON CONFLICT ("key") DO NOTHING', ['bank_account', '0888101901']);
             await pool.query('INSERT INTO SystemSettings ("key", value_text) VALUES ($1, $2) ON CONFLICT ("key") DO NOTHING', ['bank_holder', 'PHAM CHI THANH']);
+            try {
+                await pool.query('ALTER TABLE Users ADD COLUMN IF NOT EXISTS bank_name VARCHAR(100)');
+                await pool.query('ALTER TABLE Users ADD COLUMN IF NOT EXISTS bank_account VARCHAR(50)');
+                await pool.query('ALTER TABLE Users ADD COLUMN IF NOT EXISTS bank_holder VARCHAR(100)');
+                console.log('Đảm bảo bảng Users có cột thông tin ngân hàng.');
+            } catch (e) { console.error('Migration bank columns:', e.message); }
+
         } catch (seedErr) {
             console.error('Seeding error:', seedErr.message);
         }
@@ -241,7 +248,10 @@ app.post('/api/register', async (req, res) => {
 // --- API Profile ---
 app.get('/api/profile', verifyToken, async (req, res) => {
     try {
-        const result = await pool.query('SELECT phone, id_card, address, job, income FROM Users WHERE id = $1', [req.user.id]);
+        const result = await pool.query(
+            'SELECT phone, id_card, address, job, income, bank_name, bank_account, bank_holder FROM Users WHERE id = $1',
+            [req.user.id]
+        );
         res.json(result.rows[0]);
     } catch (err) {
         console.error(err);
@@ -251,13 +261,16 @@ app.get('/api/profile', verifyToken, async (req, res) => {
 
 app.put('/api/profile', verifyToken, async (req, res) => {
     try {
-        const { phone, idCard, address, job, income } = req.body;
+        const { phone, idCard, address, job, income, bankName, bankAccount, bankHolder } = req.body;
         if (!/^0[0-9]{9}$/.test(phone)) return res.status(400).json({ message: 'Số điện thoại không hợp lệ (10 số)' });
         if (!/^[0-9]{12}$/.test(idCard)) return res.status(400).json({ message: 'Số CCCD không hợp lệ (12 số)' });
+        if (!bankAccount) return res.status(400).json({ message: 'Vui lòng nhập số tài khoản ngân hàng' });
+        if (!bankHolder) return res.status(400).json({ message: 'Vui lòng nhập tên chủ tài khoản' });
+        if (!bankName) return res.status(400).json({ message: 'Vui lòng nhập tên ngân hàng' });
 
         await pool.query(
-            'UPDATE Users SET phone = $1, id_card = $2, address = $3, job = $4, income = $5 WHERE id = $6',
-            [phone, idCard, address, job, income, req.user.id]
+            'UPDATE Users SET phone = $1, id_card = $2, address = $3, job = $4, income = $5, bank_name = $6, bank_account = $7, bank_holder = $8 WHERE id = $9',
+            [phone, idCard, address, job, income, bankName, bankAccount, bankHolder, req.user.id]
         );
         res.json({ message: 'Profile updated' });
     } catch (err) {
@@ -271,7 +284,8 @@ app.get('/api/users', verifyToken, async (req, res) => {
     if (req.user.role !== 'admin') return res.status(403).json({ message: 'Từ chối truy cập.' });
     try {
         const result = await pool.query(`
-            SELECT u.id, u.name, u.username, u.password, u.phone, u.id_card, u.address, u.job, u.income, 
+            SELECT u.id, u.name, u.username, u.password, u.phone, u.id_card, u.address, u.job, u.income,
+                   u.bank_name, u.bank_account, u.bank_holder,
             (SELECT COUNT(*) FROM Loans l WHERE l."customerId" = u.id) as "loanCount"
             FROM Users u WHERE u.role = 'customer'
         `);
